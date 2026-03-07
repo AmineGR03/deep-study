@@ -1,0 +1,139 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Variables CSS globales DeepStudy ── */
+:root {
+  --color-bg:       #0a0f1e;
+  --color-surface:  #0f1629;
+  --color-border:   rgba(255,255,255,0.08);
+  --color-text:     #e2e8f4;
+  --color-muted:    #7a8aaa;
+  --color-primary:  #3478f6;
+  --color-accent:   #15b07a;
+  --font-display:   'Sora', sans-serif;
+  --font-body:      'DM Sans', sans-serif;
+}
+
+/* ── Reset & base ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbar personnalisée ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(52, 120, 246, 0.4);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(52, 120, 246, 0.7);
+}
+
+/* ── Sélection de texte ── */
+::selection {
+  background: rgba(52, 120, 246, 0.35);
+  color: #fff;
+}
+
+/* ── Classes utilitaires DeepStudy ── */
+@layer components {
+  /* Carte avec fond semi-transparent */
+  .ds-card {
+    @apply bg-dark-800 border border-white/5 rounded-2xl shadow-card;
+  }
+
+  /* Bouton primaire */
+  .ds-btn-primary {
+    @apply bg-primary-600 hover:bg-primary-500 text-white font-body font-semibold
+           px-5 py-2.5 rounded-xl transition-all duration-200 
+           hover:shadow-glow active:scale-95;
+  }
+
+  /* Bouton secondaire / outline */
+  .ds-btn-outline {
+    @apply border border-primary-500/50 hover:border-primary-400 text-primary-400
+           hover:text-primary-300 font-body font-medium
+           px-5 py-2.5 rounded-xl transition-all duration-200
+           hover:bg-primary-500/10 active:scale-95;
+  }
+
+  /* Bouton danger */
+  .ds-btn-danger {
+    @apply bg-red-600/20 hover:bg-red-600/40 text-red-400 hover:text-red-300
+           border border-red-500/30 font-body font-medium
+           px-4 py-2 rounded-xl transition-all duration-200 active:scale-95;
+  }
+
+  /* Input de formulaire */
+  .ds-input {
+    @apply w-full bg-dark-700 border border-white/10 rounded-xl
+           text-white placeholder-dark-500 font-body
+           px-4 py-3 text-sm
+           focus:outline-none focus:border-primary-500/70 focus:ring-1 focus:ring-primary-500/30
+           transition-all duration-200;
+  }
+
+  /* Label de formulaire */
+  .ds-label {
+    @apply block text-sm font-medium text-dark-500 mb-1.5;
+  }
+
+  /* Badge de rôle/type */
+  .ds-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+
+  /* Titre de section */
+  .ds-title {
+    @apply font-display font-bold text-white;
+  }
+
+  /* Texte muted */
+  .ds-muted {
+    @apply text-sm text-dark-500;
+  }
+}
+
+/* ── Animations d'entrée ── */
+.animate-fade-up {
+  animation: fadeUp 0.5s ease forwards;
+}
+
+.animate-fade-up-delay-1 { animation: fadeUp 0.5s 0.1s ease both; }
+.animate-fade-up-delay-2 { animation: fadeUp 0.5s 0.2s ease both; }
+.animate-fade-up-delay-3 { animation: fadeUp 0.5s 0.3s ease both; }
+.animate-fade-up-delay-4 { animation: fadeUp 0.5s 0.4s ease both; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Fond avec grille subtile ── */
+.bg-grid {
+  background-image: 
+    linear-gradient(rgba(52,120,246,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(52,120,246,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
