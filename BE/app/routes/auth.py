@@ -30,7 +30,8 @@ def register():
         "role": role,
         "filiere_id": data.get("filiere_id"),
         "annee_id": data.get("annee_id"),
-        "created_at": datetime.datetime.utcnow()
+        "created_at": datetime.datetime.utcnow(),
+        "specialite_id": data.get("specialite_id") if role == "etudiant" else None
     }
 
     result = collection.insert_one(user)
