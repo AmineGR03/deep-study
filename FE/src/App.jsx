@@ -7,6 +7,8 @@ import AppLayout from './components/layout/AppLayout'
 import LoginPage    from './pages/public/LoginPage'
 import RegisterPage from './pages/public/RegisterPage'
 
+import LibraryPage from './pages/student/LibraryPage'
+
 // Placeholders
 const HomePage           = () => (
   <div className="min-h-screen bg-dark-900 bg-grid flex items-center justify-center">
@@ -24,7 +26,7 @@ const HomePage           = () => (
 )
 
 const StudentDashboard   = () => <div className="ds-title text-2xl">📚 Dashboard Étudiant — à venir</div>
-const LibraryPage        = () => <div className="ds-title text-2xl">📂 Bibliothèque — à venir</div>
+// const LibraryPage        = () => <div className="ds-title text-2xl">📂 Bibliothèque — à venir</div>
 const ChatPage           = () => <div className="ds-title text-2xl">🤖 Chat IA — à venir</div>
 const HistoryPage        = () => <div className="ds-title text-2xl">🕓 Historique — à venir</div>
 const ProfessorDashboard = () => <div className="ds-title text-2xl">👨‍🏫 Dashboard Prof — à venir</div>

@@ -1,30 +1,40 @@
 import { createContext, useState, useEffect } from 'react'
 import { getToken, saveToken, removeToken, decodeToken, isTokenValid } from '../utils/tokenUtils'
+import axiosInstance from '../api/axiosInstance'
 
-// 1. Créer le contexte
 export const AuthContext = createContext(null)
 
-// 2. Provider — enveloppe toute l'app dans App.jsx
 export function AuthProvider({ children }) {
-  const [user, setUser]       = useState(null)  // { id, role, email }
-  const [loading, setLoading] = useState(true)  // true pendant la vérification initiale
+  const [user, setUser]       = useState(null)
+  const [loading, setLoading] = useState(true)
 
-  // Au démarrage : vérifier si un token valide existe déjà dans localStorage
+  // Charger le profil complet depuis /auth/me
+  async function fetchProfile() {
+    try {
+      const response = await axiosInstance.get('/auth/me')
+      setUser(response.data)
+    } catch {
+      removeToken()
+      setUser(null)
+    }
+  }
+
+  // Au démarrage : si token valide → charger le profil
   useEffect(() => {
     const token = getToken()
     if (token && isTokenValid(token)) {
-      setUser(decodeToken(token))
+      fetchProfile().finally(() => setLoading(false))
+    } else {
+      setLoading(false)
     }
-    setLoading(false)
   }, [])
 
-  // Appelé après un login réussi
-  function login(token) {
+  // Après login : sauvegarder le token puis charger le profil complet
+  async function login(token) {
     saveToken(token)
-    setUser(decodeToken(token))
+    await fetchProfile()
   }
 
-  // Appelé pour se déconnecter
   function logout() {
     removeToken()
     setUser(null)
