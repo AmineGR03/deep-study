@@ -11,6 +11,7 @@ def init_collections():
     collections_existantes = db.list_collection_names()
 
     collections = [
+        "admins",
         "filieres",
         "specialites",
         "annees",
