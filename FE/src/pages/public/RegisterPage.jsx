@@ -8,7 +8,8 @@ export default function RegisterPage() {
 
   const [form, setForm] = useState({
     nom: '', prenom: '', email: '',
-    password: '', role: 'etudiant',
+    password: '', confirmPassword: '',
+    role: 'etudiant',
     filiere_id: '', annee_id: '', specialite_id: ''
   })
   const [error, setError]     = useState('')
@@ -19,8 +20,8 @@ export default function RegisterPage() {
   const [specialites, setSpecialites] = useState([])
 
   useEffect(() => {
-    axiosInstance.get('/data/filieres').then(r => setFilieres(r.data))
-    axiosInstance.get('/data/annees').then(r => setAnnees(r.data))
+    axiosInstance.get('/data/filieres').then(r => setFilieres(r.data)).catch(() => {})
+    axiosInstance.get('/data/annees').then(r => setAnnees(r.data)).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -34,25 +35,36 @@ export default function RegisterPage() {
   }, [form.filiere_id])
 
   const anneeSelectionnee = annees.find(a => a._id === form.annee_id)
-  const showSpecialite = anneeSelectionnee
-    && anneeSelectionnee.niveau >= 4
-    && specialites.length > 0
+  const niveauAnnee = anneeSelectionnee?.niveau || 0
+  const showSpecialite = niveauAnnee >= 4 && specialites.length > 0
 
   function handleChange(e) {
     const { name, value } = e.target
-    setForm(prev => ({
-      ...prev,
-      [name]: value,
-      ...(name === 'filiere_id' ? { specialite_id: '' } : {}),
-    }))
+    setForm(prev => ({ ...prev, [name]: value }))
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
+
+    if (form.password !== form.confirmPassword) {
+      setError('Les mots de passe ne correspondent pas')
+      return
+    }
+
     setLoading(true)
     try {
-      await registerAPI(form)
+      const dataToSend = {
+        nom:           form.nom,
+        prenom:        form.prenom,
+        email:         form.email,
+        password:      form.password,
+        role:          form.role,
+        filiere_id:    form.filiere_id,
+        annee_id:      form.annee_id,
+        specialite_id: form.specialite_id || null,
+      }
+      await registerAPI(dataToSend)
       navigate('/login')
     } catch (err) {
       setError(err.response?.data?.error || 'Erreur lors de la création du compte')
@@ -82,8 +94,6 @@ export default function RegisterPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-
-            {/* Nom + Prénom */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="ds-label">Nom</label>
@@ -97,7 +107,6 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Email */}
             <div>
               <label className="ds-label">Email</label>
               <input type="email" name="email" value={form.email}
@@ -105,7 +114,6 @@ export default function RegisterPage() {
                 className="ds-input" required />
             </div>
 
-            {/* Mot de passe */}
             <div>
               <label className="ds-label">Mot de passe</label>
               <input type="password" name="password" value={form.password}
@@ -113,21 +121,30 @@ export default function RegisterPage() {
                 className="ds-input" required />
             </div>
 
-            {/* Filière */}
+            <div>
+              <label className="ds-label">Confirmer le mot de passe</label>
+              <input type="password" name="confirmPassword" value={form.confirmPassword}
+                onChange={handleChange} placeholder="••••••••"
+                className={`ds-input ${
+                  form.confirmPassword && form.password !== form.confirmPassword
+                    ? 'border-red-500/60' : ''
+                }`} required />
+              {form.confirmPassword && form.password !== form.confirmPassword && (
+                <p className="text-red-400 text-xs mt-1">Les mots de passe ne correspondent pas</p>
+              )}
+            </div>
+
             <div>
               <label className="ds-label">Filière</label>
               <select name="filiere_id" value={form.filiere_id}
                 onChange={handleChange} className="ds-input" required>
                 <option value="">-- Choisir une filière --</option>
                 {filieres.map(f => (
-                  <option key={f._id} value={f._id}>
-                    {f.nom} — {f.label}
-                  </option>
+                  <option key={f._id} value={f._id}>{f.nom} — {f.label}</option>
                 ))}
               </select>
             </div>
 
-            {/* Année */}
             <div>
               <label className="ds-label">Année</label>
               <select name="annee_id" value={form.annee_id}
@@ -139,17 +156,14 @@ export default function RegisterPage() {
               </select>
             </div>
 
-            {/* Spécialité — uniquement 4ème/5ème année */}
             {showSpecialite && (
-              <div>
+              <div className="animate-fade-in">
                 <label className="ds-label">Spécialité</label>
                 <select name="specialite_id" value={form.specialite_id}
                   onChange={handleChange} className="ds-input">
                   <option value="">-- Choisir une spécialité --</option>
                   {specialites.map(s => (
-                    <option key={s._id} value={s._id}>
-                      {s.nom} — {s.label}
-                    </option>
+                    <option key={s._id} value={s._id}>{s.nom} — {s.label}</option>
                   ))}
                 </select>
               </div>
