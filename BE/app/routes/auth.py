@@ -42,7 +42,8 @@ def login():
     data = request.json
 
     user = db["etudiants"].find_one({"email": data["email"]}) or \
-           db["professeurs"].find_one({"email": data["email"]})
+           db["professeurs"].find_one({"email": data["email"]}) or \
+           db["admins"].find_one({"email": data["email"]})
 
     if not user:
         return jsonify({"error": "Utilisateur introuvable"}), 404
