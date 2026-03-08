@@ -1,7 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 
-// Liens selon le rôle
 const menuItems = {
   etudiant: [
     { path: '/student',         label: 'Tableau de bord', icon: '🏠' },
@@ -10,8 +9,9 @@ const menuItems = {
     { path: '/student/history', label: 'Historique',      icon: '🕓' },
   ],
   professeur: [
-    { path: '/professor',           label: 'Tableau de bord',  icon: '🏠' },
-    { path: '/professor/documents', label: 'Mes documents',    icon: '📤' },
+    { path: '/professor',              label: 'Tableau de bord', icon: '🏠' },
+    { path: '/professor/upload',       label: 'Uploader',        icon: '📤' },
+    { path: '/professor/documents',    label: 'Mes documents',   icon: '📂' },
   ],
   admin: [
     { path: '/admin', label: 'Dashboard Admin', icon: '⚙️' },
@@ -26,8 +26,6 @@ export default function Sidebar() {
 
   return (
     <aside className="w-60 bg-dark-800 border-r border-white/5 fixed top-16 left-0 bottom-0 flex flex-col py-6 px-3">
-      
-      {/* Menu */}
       <nav className="flex flex-col gap-1">
         {items.map((item) => (
           <NavLink
@@ -48,14 +46,12 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Footer sidebar */}
       <div className="mt-auto px-4">
         <div className="border-t border-white/5 pt-4">
           <p className="text-xs text-dark-500">DeepStudy EMSI</p>
           <p className="text-xs text-dark-500 opacity-50">Ramadan AI 2026</p>
         </div>
       </div>
-
     </aside>
   )
 }

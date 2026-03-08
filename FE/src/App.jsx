@@ -11,6 +11,11 @@ import RegisterPage from './pages/public/RegisterPage'
 import LibraryPage from './pages/student/LibraryPage'
 import ChatPage from './pages/student/ChatPage'
 
+// Pages Professeur
+import ProfessorDashboard  from './pages/professor/ProfessorDashboard'
+import ManageDocumentsPage from './pages/professor/ManageDocumentsPage'
+import DocumentsListPage   from './pages/professor/DocumentsListPage'
+
 // Placeholders
 const HomePage           = () => (
   <div className="min-h-screen bg-dark-900 bg-grid flex items-center justify-center">
@@ -29,8 +34,6 @@ const HomePage           = () => (
 
 const StudentDashboard   = () => <div className="ds-title text-2xl">📚 Dashboard Étudiant — à venir</div>
 const HistoryPage        = () => <div className="ds-title text-2xl">🕓 Historique — à venir</div>
-const ProfessorDashboard = () => <div className="ds-title text-2xl">👨‍🏫 Dashboard Prof — à venir</div>
-const ManageDocuments    = () => <div className="ds-title text-2xl">📤 Gestion Documents — à venir</div>
 const AdminDashboard     = () => <div className="ds-title text-2xl">⚙️ Dashboard Admin — à venir</div>
 
 // Wrapper : ProtectedRoute + AppLayout combinés
@@ -72,8 +75,11 @@ export default function App() {
           <Route path="/professor" element={
             <PrivatePage roles={['professeur']}><ProfessorDashboard /></PrivatePage>
           }/>
+          <Route path="/professor/upload" element={
+            <PrivatePage roles={['professeur', 'admin']}><ManageDocumentsPage /></PrivatePage>
+          }/>
           <Route path="/professor/documents" element={
-            <PrivatePage roles={['professeur', 'admin']}><ManageDocuments /></PrivatePage>
+            <PrivatePage roles={['professeur', 'admin']}><DocumentsListPage /></PrivatePage>
           }/>
 
           {/* ── Admin ── */}
