@@ -38,7 +38,29 @@ annee4_id = result.inserted_ids[3]
 annee5_id = result.inserted_ids[4]
 print("✅ Années insérées")
 
-# ── 3. Semestres ──
+# ── 3. Spécialités IIR ──
+db["specialites"].delete_many({})
+specialite_id1 = db["specialites"].insert_one({
+    "nom": "DDSI",
+    "label": "Développement Digital & Systèmes d'Information",
+    "filiere_id": str(iir_id),
+    "created_at": datetime.datetime.utcnow()
+}).inserted_id
+specialite_id2 = db["specialites"].insert_one({
+    "nom": "IASD",
+    "label": "Intelligence Artificielle & Sciences des Données",
+    "filiere_id": str(iir_id),
+    "created_at": datetime.datetime.utcnow()
+}).inserted_id
+specialite_id3 = db["specialites"].insert_one({
+    "nom": "CIR",
+    "label": "Cybersécurité & Infrastructures Réseaux",
+    "filiere_id": str(iir_id),
+    "created_at": datetime.datetime.utcnow()
+}).inserted_id
+print("✅ Spécialités insérées")
+
+# ── 4. Semestres ──
 db["semestres"].delete_many({})
 semestres = []
 for annee_id, niveau in [
@@ -49,15 +71,6 @@ for annee_id, niveau in [
     semestres.append({"numero": 2, "label": f"S{(niveau-1)*2+2}", "annee_id": str(annee_id), "created_at": datetime.datetime.utcnow()})
 db["semestres"].insert_many(semestres)
 print("✅ Semestres insérés")
-
-# ── 4. Spécialités IIR ──
-db["specialites"].delete_many({})
-db["specialites"].insert_many([
-    {"nom": "DDSI", "label": "Développement Digital & Systèmes d'Information", "filiere_id": str(iir_id), "created_at": datetime.datetime.utcnow()},
-    {"nom": "IASD", "label": "Intelligence Artificielle & Sciences des Données", "filiere_id": str(iir_id), "created_at": datetime.datetime.utcnow()},
-    {"nom": "CIR",  "label": "Cybersécurité & Infrastructures Réseaux",          "filiere_id": str(iir_id), "created_at": datetime.datetime.utcnow()},
-])
-print("✅ Spécialités insérées")
 
 # ── 5. Types de ressources ──
 db["types_ressources"].delete_many({})
@@ -134,8 +147,8 @@ print(f"✅ {len(matieres)} matières insérées")
 def hash_password(password):
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt())
 
-# ── Admin ──
-db["admin"].delete_many({"role": "admin"})
+# ── Admin (collection séparée) ──
+db["admin"].delete_many({})
 db["admin"].insert_one({
     "nom": "Admin",
     "prenom": "DeepStudy",
@@ -147,7 +160,7 @@ db["admin"].insert_one({
 print("✅ Compte admin inséré     → admin@deepstudy.ma / admin1234")
 
 # ── Professeurs ──
-db["professeurs"].delete_many({"role": "professeur"})
+db["professeurs"].delete_many({})
 db["professeurs"].insert_many([
     {
         "nom": "Alami",
@@ -187,6 +200,7 @@ db["etudiants"].insert_many([
         "role": "etudiant",
         "filiere_id": str(iir_id),
         "annee_id": str(annee4_id),
+        "specialite_id": str(specialite_id1),  # DDSI
         "created_at": datetime.datetime.utcnow()
     },
     {
@@ -197,9 +211,9 @@ db["etudiants"].insert_many([
         "role": "etudiant",
         "filiere_id": str(iir_id),
         "annee_id": str(annee4_id),
+        "specialite_id": str(specialite_id2),  # IASD
         "created_at": datetime.datetime.utcnow()
     },
-    
 ])
 print("✅ Comptes étudiants insérés   → mot de passe : etudiant1234")
 
@@ -208,6 +222,9 @@ print("\n🎉 Données de test prêtes !")
 print(f"\n📌 IIR ID        : {iir_id}")
 print(f"📌 3ème année ID : {annee3_id}")
 print(f"📌 4ème année ID : {annee4_id}")
+print(f"📌 DDSI ID       : {specialite_id1}")
+print(f"📌 IASD ID       : {specialite_id2}")
+print(f"📌 CIR ID        : {specialite_id3}")
 print("\n─────────────────────────────────────────")
 print("👤 Comptes disponibles :")
 print("─────────────────────────────────────────")
@@ -215,7 +232,6 @@ print("  ADMIN      → admin@deepstudy.ma   / admin1234")
 print("  PROF 1     → alami@emsi.ma        / prof1234")
 print("  PROF 2     → benali@emsi.ma       / prof1234")
 print("  PROF 3     → chraibi@emsi.ma      / prof1234")
-print("  ETUDIANT 1 → amine@emsi.ma        / etudiant1234")
-print("  ETUDIANT 2 → gourari@emsi.ma      / etudiant1234")
-
+print("  ETUDIANT 1 → amine@emsi.ma        / etudiant1234  (DDSI)")
+print("  ETUDIANT 2 → gourari@emsi.ma      / etudiant1234  (IASD)")
 print("─────────────────────────────────────────")
