@@ -1,35 +1,88 @@
-import { useState } from 'react'
-// import reactLogo from './assets/react.svg'
-// import viteLogo from '/vite.svg'
-// import './App.css'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext'
+import ProtectedRoute from './components/layout/ProtectedRoute'
+import AppLayout from './components/layout/AppLayout'
 
-function App() {
-  const [count, setCount] = useState(0)
+// Pages publiques
+import LoginPage    from './pages/public/LoginPage'
+import RegisterPage from './pages/public/RegisterPage'
 
+// Placeholders
+const HomePage           = () => (
+  <div className="min-h-screen bg-dark-900 bg-grid flex items-center justify-center">
+    <div className="text-center animate-fade-up">
+      <h1 className="font-display text-5xl font-bold text-white mb-4">
+        Deep<span className="text-primary-500">Study</span>
+      </h1>
+      <p className="text-dark-500 mb-8">Assistant pédagogique intelligent — EMSI Rabat</p>
+      <div className="flex gap-4 justify-center">
+        <a href="/login"    className="ds-btn-primary">Se connecter</a>
+        <a href="/register" className="ds-btn-outline">S'inscrire</a>
+      </div>
+    </div>
+  </div>
+)
+
+const StudentDashboard   = () => <div className="ds-title text-2xl">📚 Dashboard Étudiant — à venir</div>
+const LibraryPage        = () => <div className="ds-title text-2xl">📂 Bibliothèque — à venir</div>
+const ChatPage           = () => <div className="ds-title text-2xl">🤖 Chat IA — à venir</div>
+const HistoryPage        = () => <div className="ds-title text-2xl">🕓 Historique — à venir</div>
+const ProfessorDashboard = () => <div className="ds-title text-2xl">👨‍🏫 Dashboard Prof — à venir</div>
+const ManageDocuments    = () => <div className="ds-title text-2xl">📤 Gestion Documents — à venir</div>
+const AdminDashboard     = () => <div className="ds-title text-2xl">⚙️ Dashboard Admin — à venir</div>
+
+// Wrapper : ProtectedRoute + AppLayout combinés
+function PrivatePage({ roles, children }) {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <ProtectedRoute allowedRoles={roles}>
+      <AppLayout>
+        {children}
+      </AppLayout>
+    </ProtectedRoute>
   )
 }
 
-export default App
+export default function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* ── Publiques ── */}
+          <Route path="/"         element={<HomePage />} />
+          <Route path="/login"    element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+
+          {/* ── Étudiant ── */}
+          <Route path="/student" element={
+            <PrivatePage roles={['etudiant']}><StudentDashboard /></PrivatePage>
+          }/>
+          <Route path="/student/library" element={
+            <PrivatePage roles={['etudiant']}><LibraryPage /></PrivatePage>
+          }/>
+          <Route path="/student/chat" element={
+            <PrivatePage roles={['etudiant']}><ChatPage /></PrivatePage>
+          }/>
+          <Route path="/student/history" element={
+            <PrivatePage roles={['etudiant']}><HistoryPage /></PrivatePage>
+          }/>
+
+          {/* ── Professeur ── */}
+          <Route path="/professor" element={
+            <PrivatePage roles={['professeur']}><ProfessorDashboard /></PrivatePage>
+          }/>
+          <Route path="/professor/documents" element={
+            <PrivatePage roles={['professeur', 'admin']}><ManageDocuments /></PrivatePage>
+          }/>
+
+          {/* ── Admin ── */}
+          <Route path="/admin" element={
+            <PrivatePage roles={['admin']}><AdminDashboard /></PrivatePage>
+          }/>
+
+          {/* ── Fallback ── */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  )
+}
