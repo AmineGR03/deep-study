@@ -26,10 +26,11 @@ git clone https://github.com/TON_USERNAME/NOM_DU_REPO.git
 cd NOM_DU_REPO
 ```
 
-### 2. Se mettre sur la bonne branche
+### 2. Se mettre sur la bonne branche et aller dans BE/
 
 ```bash
 git checkout feature/backend
+cd BE
 ```
 
 ### 3. Créer l'environnement virtuel Python
@@ -47,30 +48,7 @@ source venv/bin/activate
 
 > ✅ Tu dois voir `(venv)` au début de ta ligne de commande.
 
-### 4. Installer les dépendances
-
-```bash
-pip install -r requirements.txt
-```
-
-> ⚠️ La première installation peut prendre quelques minutes — le modèle `all-MiniLM-L6-v2` (~90MB) se télécharge automatiquement.
-
-### 5. Configurer les variables d'environnement
-
-Crée un fichier `.env` à la racine du projet :
-
-```env
-MONGO_URI=mongodb://localhost:27017/deepstudy
-JWT_SECRET_KEY=deepstudy_secret_super_long_2026
-UPLOAD_FOLDER=./uploads
-CHROMA_PATH=./chroma_db
-```
-
-> ⚠️ Ne jamais committer ce fichier — il est déjà dans le `.gitignore`.
-
-### 6. Lancer MongoDB
-
-Assure-toi que MongoDB tourne en local :
+### 4. Lancer MongoDB (dans un terminal séparé)
 
 ```bash
 # Windows (si installé comme service, il tourne déjà)
@@ -81,16 +59,32 @@ mongod
 sudo systemctl start mongod
 ```
 
-### 7. Initialiser la base de données
+> Laisse ce terminal ouvert et reviens dans le terminal principal.
 
-Ce script crée toutes les collections et les index :
+### 5. Lancer le setup automatique
 
 ```bash
-python app/db/init_db.py
+python setup.py
 ```
+
+Ce script fait automatiquement :
+- ✅ Installation de toutes les dépendances (`requirements.txt`)
+- ✅ Création des dossiers `uploads/` et `chroma_db/`
+- ✅ Génération du fichier `.env` s'il n'existe pas
+- ✅ Initialisation de la base de données MongoDB (collections + index + seed)
 
 Tu dois voir :
 ```
+==================================================
+   DeepStudy EMSI — Setup automatique
+==================================================
+
+📦 Installation des dépendances...
+📁 Création des dossiers...
+✅ uploads/ et chroma_db/ créés
+⚙️  Création du fichier .env...
+✅ .env créé
+🗄️  Initialisation de la base de données MongoDB...
 ✅ Collection créée : filieres
 ✅ Collection créée : specialites
 ...
@@ -99,11 +93,27 @@ Tu dois voir :
 ✅ Type inséré : EXAM
 ✅ Type inséré : RESUME
 🎉 Base de données initialisée avec succès !
+
+==================================================
+🎉 Setup terminé ! Lance le serveur avec :
+   python run.py
+==================================================
 ```
 
-> ⚠️ Ne lancer ce script qu'une seule fois. Si tu le relances, il affichera "Déjà existante" pour chaque collection — c'est normal.
+> ⚠️ La première installation peut prendre quelques minutes — le modèle `all-MiniLM-L6-v2` (~90MB) se télécharge automatiquement.
 
-### 8. Lancer le serveur
+> ⚠️ Le fichier `.env` généré automatiquement contient des valeurs par défaut. Tu peux le modifier manuellement si besoin :
+
+```env
+MONGO_URI=mongodb://localhost:27017/deepstudy
+JWT_SECRET_KEY=deepstudy_secret_super_long_2026
+UPLOAD_FOLDER=./uploads
+CHROMA_PATH=./chroma_db
+```
+
+> ⚠️ Ne jamais committer ce fichier — il est déjà dans le `.gitignore`.
+
+### 6. Lancer le serveur
 
 ```bash
 python run.py
@@ -224,24 +234,25 @@ find . -type d -name __pycache__ -exec rm -rf {} +
 ```
 deepstudy-backend/
 ├── app/
-│   ├── __init__.py          # Factory Flask + connexion MongoDB
-│   ├── config.py            # Variables d'environnement
+│   ├── __init__.py             # Factory Flask + connexion MongoDB
+│   ├── config.py               # Variables d'environnement
 │   ├── routes/
-│   │   ├── auth.py          # /auth/login, /auth/register
-│   │   ├── documents.py     # /documents/upload, /list, DELETE
-│   │   └── chat.py          # /chat/ask, /chat/history
+│   │   ├── auth.py             # /auth/login, /auth/register
+│   │   ├── documents.py        # /documents/upload, /list, DELETE
+│   │   └── chat.py             # /chat/ask, /chat/history
 │   ├── middleware/
 │   │   └── auth_middleware.py  # Décorateur role_required
 │   ├── services/
 │   │   └── rag_service.py      # Pipeline RAG complet
 │   └── db/
 │       └── init_db.py          # Initialisation MongoDB
-├── uploads/                 # Fichiers PDF stockés ici
-├── chroma_db/               # Vecteurs ChromaDB stockés ici
-├── clear_uploads.py         # Script utilitaire
-├── .env                     # Variables secrètes (ne pas committer)
-├── requirements.txt         # Dépendances Python
-└── run.py                   # Point d'entrée du serveur
+├── uploads/                    # Fichiers PDF stockés ici
+├── chroma_db/                  # Vecteurs ChromaDB stockés ici
+├── clear_uploads.py            # Script utilitaire — vider uploads
+├── setup.py                    # Script d'installation automatique
+├── .env                        # Variables secrètes (ne pas committer)
+├── requirements.txt            # Dépendances Python
+└── run.py                      # Point d'entrée du serveur
 ```
 
 ---
@@ -255,3 +266,4 @@ deepstudy-backend/
 | `Subject must be a string` | Token expiré ou ancien — refaire un `/auth/login` |
 | `ImportError: cannot import ...` | Supprimer `__pycache__` et relancer |
 | `422 Unprocessable Entity` | Vérifier que le Body est en `raw → JSON` dans Postman |
+| `setup.py` échoue sur init_db | MongoDB n'est pas lancé — lancer `mongod` d'abord |

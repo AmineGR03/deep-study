@@ -15,6 +15,51 @@
 
 ---
 
+## 🚀 Installation
+
+### 1. Cloner le repo et aller dans BE/
+
+```bash
+git clone https://github.com/TON_USERNAME/NOM_DU_REPO.git
+cd NOM_DU_REPO/BE
+```
+
+### 2. Créer et activer le venv
+
+```bash
+python -m venv venv
+
+# Windows
+venv\Scripts\activate
+
+# Mac / Linux
+source venv/bin/activate
+```
+
+### 3. Lancer le setup automatique
+
+```bash
+python setup.py
+```
+
+> Ce script installe les dépendances, crée les dossiers `uploads/` et `chroma_db/`, génère le `.env` et initialise la base de données MongoDB automatiquement.
+
+### 4. Lancer MongoDB (dans un terminal séparé)
+
+```bash
+mongod
+```
+
+### 5. Lancer le serveur
+
+```bash
+python run.py
+```
+
+✅ Le serveur tourne sur `http://127.0.0.1:5000`
+
+---
+
 ## 📅 07 Mars 2026 — Session 1 : Initialisation & Auth
 
 ### ✅ Ce qui a été fait
@@ -45,6 +90,7 @@ deepstudy-backend/
 ├── chroma_db/
 ├── .env
 ├── requirements.txt
+├── setup.py
 ├── run.py
 └── .gitignore
 ```
@@ -96,6 +142,7 @@ Index créés sur : `email` (unique), `filiere_id`, `matiere_id`, `annee_id`, `c
 
 #### 8. Utilitaires
 - Script `clear_uploads.py` — vide le dossier `uploads/` proprement
+- Script `setup.py` — installation et configuration automatique du projet
 
 ---
 
@@ -121,6 +168,7 @@ Index créés sur : `email` (unique), `filiere_id`, `matiere_id`, `annee_id`, `c
 | Chatbot /chat/ask | ✅ Terminé |
 | Historique conversations | ✅ Terminé |
 | Tests Postman | ✅ Validés |
+| Script setup.py | ✅ Terminé |
 | Connexion avec le Frontend | ⏳ À faire |
 | Intégration LLM (Ollama/OpenAI) | ⏳ À faire |
 | Déploiement | ⏳ À faire |
