@@ -85,12 +85,15 @@ deepstudy-backend/
 │   ├── services/
 │   │   └── rag_service.py
 │   └── db/
-│       └── init_db.py
+│       ├── init_db.py
+│       ├── seed_data.py
+│       └── clear_db.py
 ├── uploads/
 ├── chroma_db/
 ├── .env
 ├── requirements.txt
 ├── setup.py
+├── clear_uploads.py
 ├── run.py
 └── .gitignore
 ```
@@ -105,9 +108,11 @@ chromadb, pypdf, python-docx, sentence-transformers
 #### 4. Base de données MongoDB initialisée
 Script `app/db/init_db.py` exécuté — toutes les collections créées :
 - `filieres`, `specialites`, `annees`, `semestres`
-- `etudiants`, `professeurs`, `matieres`
-- `types_ressources`, `ressources`, `document_chunks`
+- `etudiants`, `professeurs` (contient aussi les admins via le champ `role`)
+- `matieres`, `types_ressources`, `ressources`, `document_chunks`
 - `conversations`, `messages`
+
+> ⚠️ Les admins sont stockés dans la collection `professeurs` avec `role: "admin"` — pas de collection séparée.
 
 Types de ressources seedés : `COURS`, `TP`, `EXAM`, `RESUME`
 
@@ -140,9 +145,42 @@ Index créés sur : `email` (unique), `filiere_id`, `matiere_id`, `annee_id`, `c
 - `GET /chat/history` — historique des conversations d'un étudiant
 - Conversations et messages sauvegardés dans MongoDB
 
-#### 8. Utilitaires
-- Script `clear_uploads.py` — vide le dossier `uploads/` proprement
-- Script `setup.py` — installation et configuration automatique du projet
+#### 8. Seeders & Utilitaires ✅
+
+**`app/db/seed_data.py`** — Insère toutes les données de test :
+- 6 filières (IIR, GESI, IAII, GCBTP, GI, GF)
+- 5 années + 10 semestres
+- 3 spécialités IIR (DDSI, IASD, CIR)
+- 4 types de ressources (COURS, TP, EXAM, RESUME)
+- 44 matières (3ème et 4ème année IIR — S1 et S2)
+- Comptes utilisateurs prêts à l'emploi :
+
+| Rôle | Email | Mot de passe |
+|---|---|---|
+| Admin | admin@deepstudy.ma | admin1234 |
+| Professeur | alami@emsi.ma | prof1234 |
+| Professeur | benali@emsi.ma | prof1234 |
+| Professeur | chraibi@emsi.ma | prof1234 |
+| Étudiant | amine@emsi.ma | etudiant1234 |
+| Étudiant | gourari@emsi.ma | etudiant1234 |
+
+
+**`app/db/clear_db.py`** — Vide toutes les collections MongoDB avec confirmation :
+```bash
+python app/db/clear_db.py
+# ⚠️ Es-tu sûr de vouloir vider toute la BD ? (oui/non) :
+```
+
+**`clear_uploads.py`** — Vide le dossier `uploads/` et les fichiers physiques.
+
+**`setup.py`** — Installation et configuration automatique du projet.
+
+**Workflow base de données :**
+```bash
+python app/db/clear_db.py    # 1. Vider la BD
+python app/db/init_db.py     # 2. Recréer les collections + index
+python app/db/seed_data.py   # 3. Insérer les données de test
+```
 
 ---
 
@@ -154,6 +192,7 @@ Index créés sur : `email` (unique), `filiere_id`, `matiere_id`, `annee_id`, `c
 | `KeyError: 'email'` | Données envoyées en query params au lieu de JSON body | Utiliser Body → raw → JSON dans Postman |
 | `Subject must be a string` | Flask-JWT-Extended récent exige une string comme identity | Passer l'`_id` comme identity, role/email en `additional_claims` |
 | Erreur 422 avec ancien token | Token généré avant le fix du JWT | Re-login pour obtenir un nouveau token |
+| `ModuleNotFoundError: pymongo` | pip installe dans le Python global, pas dans le venv | Supprimer et recréer le venv, utiliser `python -m pip install` |
 
 ---
 
@@ -169,6 +208,8 @@ Index créés sur : `email` (unique), `filiere_id`, `matiere_id`, `annee_id`, `c
 | Historique conversations | ✅ Terminé |
 | Tests Postman | ✅ Validés |
 | Script setup.py | ✅ Terminé |
+| Seeders (filières, matières, users) | ✅ Terminé |
+| Script clear_db.py | ✅ Terminé |
 | Connexion avec le Frontend | ⏳ À faire |
 | Intégration LLM (Ollama/OpenAI) | ⏳ À faire |
 | Déploiement | ⏳ À faire |
@@ -178,7 +219,7 @@ Index créés sur : `email` (unique), `filiere_id`, `matiere_id`, `annee_id`, `c
 ## 🚀 Prochaines étapes
 
 - [ ] Tester `/chat/ask` avec un vrai LLM (Ollama + Mistral)
-- [ ] Aligner les contrats d'API avec le Frontend (Dikra & Noha)
+- [ ] Aligner les contrats d'API avec le Frontend 
 - [ ] Ajouter la gestion des erreurs globale (error handlers Flask)
 - [ ] Écrire les tests unitaires pour les routes principales
 - [ ] Déploiement sur serveur (Railway / Render / VPS)

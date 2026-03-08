@@ -23,86 +23,34 @@ Assure-toi d'avoir installé sur ta machine :
 
 ```bash
 git clone https://github.com/TON_USERNAME/NOM_DU_REPO.git
-cd NOM_DU_REPO
+cd NOM_DU_REPO/BE
 ```
 
-### 2. Se mettre sur la bonne branche et aller dans BE/
+### 2. Créer et activer le venv
 
 ```bash
-git checkout feature/backend
-cd BE
-```
-
-### 3. Créer l'environnement virtuel Python
-
-```bash
-# Créer le venv
 python -m venv venv
 
-# Activer sur Windows
+# Windows
 venv\Scripts\activate
 
-# Activer sur Mac / Linux
+# Mac / Linux
 source venv/bin/activate
 ```
 
 > ✅ Tu dois voir `(venv)` au début de ta ligne de commande.
 
-### 4. Lancer MongoDB (dans un terminal séparé)
+### 3. Installer les dépendances
 
 ```bash
-# Windows (si installé comme service, il tourne déjà)
-# Sinon, lance manuellement :
-mongod
-
-# Mac / Linux
-sudo systemctl start mongod
-```
-
-> Laisse ce terminal ouvert et reviens dans le terminal principal.
-
-### 5. Lancer le setup automatique
-
-```bash
-python setup.py
-```
-
-Ce script fait automatiquement :
-- ✅ Installation de toutes les dépendances (`requirements.txt`)
-- ✅ Création des dossiers `uploads/` et `chroma_db/`
-- ✅ Génération du fichier `.env` s'il n'existe pas
-- ✅ Initialisation de la base de données MongoDB (collections + index + seed)
-
-Tu dois voir :
-```
-==================================================
-   DeepStudy EMSI — Setup automatique
-==================================================
-
-📦 Installation des dépendances...
-📁 Création des dossiers...
-✅ uploads/ et chroma_db/ créés
-⚙️  Création du fichier .env...
-✅ .env créé
-🗄️  Initialisation de la base de données MongoDB...
-✅ Collection créée : filieres
-✅ Collection créée : specialites
-...
-✅ Type inséré : COURS
-✅ Type inséré : TP
-✅ Type inséré : EXAM
-✅ Type inséré : RESUME
-🎉 Base de données initialisée avec succès !
-
-==================================================
-🎉 Setup terminé ! Lance le serveur avec :
-   python run.py
-==================================================
+python -m pip install -r requirements.txt
 ```
 
 > ⚠️ La première installation peut prendre quelques minutes — le modèle `all-MiniLM-L6-v2` (~90MB) se télécharge automatiquement.
 
-> ⚠️ Le fichier `.env` généré automatiquement contient des valeurs par défaut. Tu peux le modifier manuellement si besoin :
+### 4. Créer le fichier `.env`
+
+Crée un fichier `.env` à la racine de `BE/` :
 
 ```env
 MONGO_URI=mongodb://localhost:27017/deepstudy
@@ -113,61 +61,71 @@ CHROMA_PATH=./chroma_db
 
 > ⚠️ Ne jamais committer ce fichier — il est déjà dans le `.gitignore`.
 
-### 6. Lancer le serveur
+### 5. Créer les dossiers manquants
+
+```bash
+mkdir uploads
+mkdir chroma_db
+```
+
+### 6. Lancer MongoDB (dans un terminal séparé)
+
+```bash
+# Windows
+mongod
+
+# Mac / Linux
+sudo systemctl start mongod
+```
+
+> Laisse ce terminal ouvert et reviens dans le terminal principal.
+
+### 7. Initialiser les collections
+
+```bash
+python app/db/init_db.py
+```
+
+### 8. Insérer les données de test
+
+```bash
+python app/db/seed_data.py
+```
+
+Tu verras à la fin le résumé des comptes disponibles :
+
+```
+👤 Comptes disponibles :
+  ADMIN      → admin@deepstudy.ma   / admin1234
+  PROF 1     → alami@emsi.ma        / prof1234
+  PROF 2     → benali@emsi.ma       / prof1234
+  PROF 3     → chraibi@emsi.ma      / prof1234
+  ETUDIANT 1 → amine@emsi.ma        / etudiant1234
+  ETUDIANT 2 → gourari@emsi.ma      / etudiant1234
+  ETUDIANT 3 → lina@emsi.ma         / etudiant1234
+```
+
+### 9. Lancer le serveur
 
 ```bash
 python run.py
 ```
 
-Tu dois voir :
-```
-* Running on http://127.0.0.1:5000
-* Debugger is active!
-```
+✅ Le serveur tourne sur `http://127.0.0.1:5000`
 
 ---
 
 ## 🧪 Tester que tout fonctionne
 
-### Créer un compte étudiant
-
-```
-POST http://127.0.0.1:5000/auth/register
-Content-Type: application/json
-
-{
-  "nom": "Jeait",
-  "prenom": "Amine",
-  "email": "amine@emsi.ma",
-  "password": "1234",
-  "role": "etudiant"
-}
-```
-
-### Créer un compte professeur
-
-```
-POST http://127.0.0.1:5000/auth/register
-Content-Type: application/json
-
-{
-  "nom": "Alami",
-  "prenom": "Mohamed",
-  "email": "prof@emsi.ma",
-  "password": "1234",
-  "role": "professeur"
-}
-```
-
-### Se connecter et récupérer le token
+### Se connecter avec un compte seedé
 
 ```
 POST http://127.0.0.1:5000/auth/login
 Content-Type: application/json
 
 {
-  "email": "prof@emsi.ma",
-  "password": "1234"
+  "email": "alami@emsi.ma",
+  "password": "prof1234"
 }
 ```
 
@@ -210,6 +168,14 @@ Content-Type: application/json
 
 ## 🛠️ Utilitaires
 
+### Vider et réinitialiser la base de données
+
+```bash
+python app/db/clear_db.py    # Vider toutes les collections
+python app/db/init_db.py     # Recréer les collections + index
+python app/db/seed_data.py   # Réinsérer les données de test
+```
+
 ### Vider le dossier uploads
 
 ```bash
@@ -232,7 +198,7 @@ find . -type d -name __pycache__ -exec rm -rf {} +
 ## 📁 Structure du projet
 
 ```
-deepstudy-backend/
+BE/
 ├── app/
 │   ├── __init__.py             # Factory Flask + connexion MongoDB
 │   ├── config.py               # Variables d'environnement
@@ -245,10 +211,12 @@ deepstudy-backend/
 │   ├── services/
 │   │   └── rag_service.py      # Pipeline RAG complet
 │   └── db/
-│       └── init_db.py          # Initialisation MongoDB
+│       ├── init_db.py          # Création collections + index
+│       ├── seed_data.py        # Insertion données de test
+│       └── clear_db.py         # Vidage de la BD
 ├── uploads/                    # Fichiers PDF stockés ici
 ├── chroma_db/                  # Vecteurs ChromaDB stockés ici
-├── clear_uploads.py            # Script utilitaire — vider uploads
+├── clear_uploads.py            # Vider le dossier uploads
 ├── setup.py                    # Script d'installation automatique
 ├── .env                        # Variables secrètes (ne pas committer)
 ├── requirements.txt            # Dépendances Python
@@ -261,9 +229,10 @@ deepstudy-backend/
 
 | Erreur | Solution |
 |---|---|
-| `ModuleNotFoundError` | Vérifier que le venv est activé : `venv\Scripts\activate` |
+| `ModuleNotFoundError` | Utiliser `python -m pip install -r requirements.txt` au lieu de `pip install` |
 | `Connection refused` (MongoDB) | Lancer MongoDB : `mongod` |
 | `Subject must be a string` | Token expiré ou ancien — refaire un `/auth/login` |
 | `ImportError: cannot import ...` | Supprimer `__pycache__` et relancer |
 | `422 Unprocessable Entity` | Vérifier que le Body est en `raw → JSON` dans Postman |
-| `setup.py` échoue sur init_db | MongoDB n'est pas lancé — lancer `mongod` d'abord |
+| `seed_data.py` échoue | MongoDB n'est pas lancé — lancer `mongod` d'abord |
+| venv ne reconnaît pas pip | Utiliser `python -m pip` à la place de `pip` directement |
