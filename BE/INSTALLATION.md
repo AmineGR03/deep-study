@@ -102,7 +102,7 @@ Tu verras à la fin le résumé des comptes disponibles :
   PROF 3     → chraibi@emsi.ma      / prof1234
   ETUDIANT 1 → amine@emsi.ma        / etudiant1234
   ETUDIANT 2 → gourari@emsi.ma      / etudiant1234
-  ETUDIANT 3 → lina@emsi.ma         / etudiant1234
+  
 ```
 
 ### 9. Lancer le serveur
