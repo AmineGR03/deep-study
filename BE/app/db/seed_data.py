@@ -148,8 +148,8 @@ def hash_password(password):
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt())
 
 # ── Admin (collection séparée) ──
-db["admin"].delete_many({})
-db["admin"].insert_one({
+db["admins"].delete_many({})
+db["admins"].insert_one({
     "nom": "Admin",
     "prenom": "DeepStudy",
     "email": "admin@deepstudy.ma",
