@@ -48,3 +48,10 @@ def get_matieres():
     for m in matieres:
         m["_id"] = str(m["_id"])
     return jsonify(matieres), 200
+
+@data_bp.route("/types", methods=["GET"])
+def get_types():
+    types = list(db["types_ressources"].find({}, {"_id": 1, "nom": 1}))
+    for t in types:
+        t["_id"] = str(t["_id"])
+    return jsonify(types), 200
