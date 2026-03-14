@@ -243,10 +243,11 @@ import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { askQuestion } from '../../api/chatAPI'
 import axiosInstance from '../../api/axiosInstance'
+import { useLocation } from 'react-router-dom'
 
 export default function ChatPage() {
   const { user } = useAuth()
-
+  
   const [messages, setMessages]             = useState([])
   const [input, setInput]                   = useState('')
   const [loading, setLoading]               = useState(false)
@@ -256,6 +257,23 @@ export default function ChatPage() {
   const [selectedMatiere, setSelectedMatiere]   = useState('')
   const [semestre, setSemestre]             = useState('')
   const bottomRef = useRef(null)
+
+  // dans le composant, après les useState :
+const location = useLocation()
+useEffect(() => {
+  if (location.state?.conversation_id) {
+    setConversationId(location.state.conversation_id)
+  }
+}, [location])
+
+// Charger les messages existants si on vient de l'historique
+useEffect(() => {
+  if (conversationId && messages.length === 0) {
+    axiosInstance.get(`/chat/messages/${conversationId}`)
+      .then(r => setMessages(r.data))
+      .catch(() => {})
+  }
+}, [conversationId])
 
   // Charger les matières de l'étudiant (filière + année)
   useEffect(() => {
