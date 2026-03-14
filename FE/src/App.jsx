@@ -16,6 +16,15 @@ import ProfessorDashboard  from './pages/professor/ProfessorDashboard'
 import ManageDocumentsPage from './pages/professor/ManageDocumentsPage'
 import DocumentsListPage   from './pages/professor/DocumentsListPage'
 
+// Pages Admin
+import AdminDashboard    from './pages/admin/AdminDashboard'
+import ManageUsersPage   from './pages/admin/ManageUsersPage'
+import ManageFilieresPage    from './pages/admin/ManageFilieresPage'
+import ManageSpecialitesPage from './pages/admin/ManageSpecialitesPage'
+import ManageMatieresPage    from './pages/admin/ManageMatieresPage'
+import ManageTypesPage       from './pages/admin/ManageTypesPage'
+// import DocumentsListPage     from './pages/professor/DocumentsListPage'
+
 // Placeholders
 const HomePage           = () => (
   <div className="min-h-screen bg-dark-900 bg-grid flex items-center justify-center">
@@ -34,17 +43,20 @@ const HomePage           = () => (
 
 const StudentDashboard   = () => <div className="ds-title text-2xl">📚 Dashboard Étudiant — à venir</div>
 const HistoryPage        = () => <div className="ds-title text-2xl">🕓 Historique — à venir</div>
-const AdminDashboard     = () => <div className="ds-title text-2xl">⚙️ Dashboard Admin — à venir</div>
 
 // Wrapper : ProtectedRoute + AppLayout combinés
+// function PrivatePage({ roles, children }) {
+//   return (
+//     <ProtectedRoute allowedRoles={roles}>
+//       <AppLayout>
+//         {children}
+//       </AppLayout>
+//     </ProtectedRoute>
+//   )
+// }
+
 function PrivatePage({ roles, children }) {
-  return (
-    <ProtectedRoute allowedRoles={roles}>
-      <AppLayout>
-        {children}
-      </AppLayout>
-    </ProtectedRoute>
-  )
+  return <AppLayout>{children}</AppLayout>
 }
 
 export default function App() {
@@ -85,6 +97,24 @@ export default function App() {
           {/* ── Admin ── */}
           <Route path="/admin" element={
             <PrivatePage roles={['admin']}><AdminDashboard /></PrivatePage>
+          }/>
+          <Route path="/admin/users" element={
+            <PrivatePage roles={['admin']}><ManageUsersPage /></PrivatePage>
+          }/>
+          <Route path="/admin/filieres" element={
+            <PrivatePage roles={['admin']}><ManageFilieresPage /></PrivatePage>
+          }/>
+          <Route path="/admin/specialites" element={
+            <PrivatePage roles={['admin']}><ManageSpecialitesPage /></PrivatePage>
+          }/>
+          <Route path="/admin/matieres" element={
+            <PrivatePage roles={['admin']}><ManageMatieresPage /></PrivatePage>
+          }/>
+          <Route path="/admin/types" element={
+            <PrivatePage roles={['admin']}><ManageTypesPage /></PrivatePage>
+          }/>
+          <Route path="/admin/documents" element={
+            <PrivatePage roles={['admin', 'professeur']}><DocumentsListPage /></PrivatePage>
           }/>
 
           {/* ── Fallback ── */}
