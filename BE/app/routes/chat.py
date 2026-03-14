@@ -65,3 +65,15 @@ def history():
     for c in conversations:
         c["_id"] = str(c["_id"])
     return jsonify(conversations), 200
+
+@chat_bp.route("/messages/<conversation_id>", methods=["GET"])
+@role_required("etudiant")
+def get_messages(conversation_id):
+    messages = list(db["messages"].find(
+        {"conversation_id": conversation_id}
+    ).sort("created_at", 1))
+    for m in messages:
+        m["_id"] = str(m["_id"])
+        if "created_at" in m:
+            m["created_at"] = m["created_at"].isoformat()
+    return jsonify(messages), 200
