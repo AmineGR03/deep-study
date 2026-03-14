@@ -15,27 +15,47 @@ export default function LoginPage() {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
+  // async function handleSubmit(e) {
+  //   e.preventDefault()
+  //   setError('')
+  //   setLoading(true)
+
+  //   try {
+  //     const data = await loginAPI(form.email, form.password)
+  //     login(data.token)  // Sauvegarde le token + met à jour le contexte
+
+  //     // Redirection selon le rôle
+  //     if (data.role === 'etudiant')   navigate('/student')
+  //     if (data.role === 'professeur') navigate('/professor')
+  //     if (data.role === 'admin')      navigate('/admin')
+
+  //   } catch (err) {
+  //     setError(err.response?.data?.error || 'Erreur de connexion')
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }
+
   async function handleSubmit(e) {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+  e.preventDefault()
+  setError('')
+  setLoading(true)
 
-    try {
-      const data = await loginAPI(form.email, form.password)
-      login(data.token)  // Sauvegarde le token + met à jour le contexte
+  try {
+    const data = await loginAPI(form.email, form.password)
+    await login(data.token)  // ← ajouter await
 
-      // Redirection selon le rôle
-      if (data.role === 'etudiant')   navigate('/student')
-      if (data.role === 'professeur') navigate('/professor')
-      if (data.role === 'admin')      navigate('/admin')
+    // Redirection selon le rôle
+    if (data.role === 'etudiant')   navigate('/student')
+    if (data.role === 'professeur') navigate('/professor')
+    if (data.role === 'admin')      navigate('/admin')
 
-    } catch (err) {
-      setError(err.response?.data?.error || 'Erreur de connexion')
-    } finally {
-      setLoading(false)
-    }
+  } catch (err) {
+    setError(err.response?.data?.error || 'Erreur de connexion')
+  } finally {
+    setLoading(false)
   }
-
+}
   return (
     <div className="min-h-screen bg-dark-900 bg-grid flex items-center justify-center px-4">
       <div className="w-full max-w-md animate-fade-up">

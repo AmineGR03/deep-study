@@ -45,19 +45,21 @@ const StudentDashboard   = () => <div className="ds-title text-2xl">📚 Dashboa
 const HistoryPage        = () => <div className="ds-title text-2xl">🕓 Historique — à venir</div>
 
 // Wrapper : ProtectedRoute + AppLayout combinés
-// function PrivatePage({ roles, children }) {
-//   return (
-//     <ProtectedRoute allowedRoles={roles}>
-//       <AppLayout>
-//         {children}
-//       </AppLayout>
-//     </ProtectedRoute>
-//   )
-// }
-
 function PrivatePage({ roles, children }) {
-  return <AppLayout>{children}</AppLayout>
+  return (
+    <ProtectedRoute allowedRoles={roles}>
+      <AppLayout>
+        {children}
+      </AppLayout>
+    </ProtectedRoute>
+  )
 }
+
+
+//=============test========================
+// function PrivatePage({ roles, children }) {
+//   return <AppLayout>{children}</AppLayout>
+// }
 
 export default function App() {
   return (

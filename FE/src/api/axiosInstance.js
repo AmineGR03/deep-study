@@ -51,26 +51,62 @@
 
 // export default axiosInstance
 
+
+// ============== test ================
+
+// import axios from 'axios'
+
+// const axiosInstance = axios.create({
+//   baseURL: import.meta.env.VITE_API_URL,
+//   headers: {
+//     'Content-Type': 'application/json',
+//   },
+//   timeout: 15000,
+// })
+
+// // Intercepteur requête désactivé — pas de token
+// axiosInstance.interceptors.request.use(
+//   (config) => config,
+//   (error) => Promise.reject(error)
+// )
+
+// // Intercepteur réponse désactivé — pas de redirection 401
+// axiosInstance.interceptors.response.use(
+//   (response) => response,
+//   (error) => Promise.reject(error)  // on laisse passer sans rediriger
+// )
+
+// export default axiosInstance
+
+
+//=============================
 import axios from 'axios'
+import { getToken, removeToken } from '../utils/tokenUtils'
 
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
   timeout: 15000,
 })
 
-// Intercepteur requête désactivé — pas de token
 axiosInstance.interceptors.request.use(
-  (config) => config,
+  (config) => {
+    const token = getToken()
+    if (token) config.headers.Authorization = `Bearer ${token}`
+    return config
+  },
   (error) => Promise.reject(error)
 )
 
-// Intercepteur réponse désactivé — pas de redirection 401
 axiosInstance.interceptors.response.use(
   (response) => response,
-  (error) => Promise.reject(error)  // on laisse passer sans rediriger
+  (error) => {
+    if (error.response?.status === 401) {
+      removeToken()
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
+  }
 )
 
 export default axiosInstance
