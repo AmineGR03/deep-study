@@ -7,10 +7,11 @@ import AppLayout from './components/layout/AppLayout'
 import LoginPage    from './pages/public/LoginPage'
 import RegisterPage from './pages/public/RegisterPage'
 
-// Pages etusiants
+// Pages etudiants
 import LibraryPage from './pages/student/LibraryPage'
 import ChatPage from './pages/student/ChatPage'
 import HistoryPage from './pages/student/HistoryPage'
+import StudentDashboard from './pages/student/StudentDashboard'
 
 // Pages Professeur
 import ProfessorDashboard  from './pages/professor/ProfessorDashboard'
@@ -41,8 +42,6 @@ const HomePage           = () => (
     </div>
   </div>
 )
-
-const StudentDashboard   = () => <div className="ds-title text-2xl">📚 Dashboard Étudiant — à venir</div>
 
 // Wrapper : ProtectedRoute + AppLayout combinés
 function PrivatePage({ roles, children }) {
