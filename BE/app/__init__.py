@@ -1,8 +1,9 @@
-from flask import Flask
+from flask import Flask, send_from_directory
 from flask_jwt_extended import JWTManager
 from pymongo import MongoClient
 from flask_cors import CORS
 from .config import Config
+import os
 
 db = None
 
@@ -28,5 +29,11 @@ def create_app():
     app.register_blueprint(chat_bp,      url_prefix="/chat")
     app.register_blueprint(data_bp,      url_prefix="/data")
     app.register_blueprint(admin_bp,     url_prefix="/admin")
+
+    # Servir les fichiers uploadés
+    @app.route('/uploads/<path:filename>')
+    def serve_file(filename):
+        upload_folder = os.path.join(os.getcwd(), 'uploads')
+        return send_from_directory(upload_folder, filename)
 
     return app
