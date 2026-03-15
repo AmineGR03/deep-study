@@ -3,6 +3,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { askQuestion } from '../../api/chatAPI'
 import axiosInstance from '../../api/axiosInstance'
 import { useLocation } from 'react-router-dom'
+import ReactMarkdown from 'react-markdown'
 
 export default function ChatPage() {
   const { user } = useAuth()
@@ -193,11 +194,40 @@ export default function ChatPage() {
                   ${msg.sender === 'etudiant' ? 'bg-primary-600 text-white' : 'bg-accent-600/30 text-accent-300'}`}>
                   {msg.sender === 'etudiant' ? '👤' : '🤖'}
                 </div>
-                <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed
+                {/* <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed
                   ${msg.sender === 'etudiant'
                     ? 'bg-primary-600 text-white rounded-br-sm'
                     : 'bg-dark-700 text-white/90 rounded-bl-sm border border-white/5'}`}>
                   {msg.contenu}
+                  {msg.sources && msg.sources.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-white/10">
+                      <p className="text-xs text-white/50 mb-1">📄 Sources :</p>
+                      {msg.sources.map((s, j) => (
+                        <p key={j} className="text-xs text-accent-400">
+                          Page {s.page} — {s.file?.split('/').pop()}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                </div> */}
+
+                <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed
+                  ${msg.sender === 'etudiant'
+                    ? 'bg-primary-600 text-white rounded-br-sm'
+                    : 'bg-dark-700 text-white/90 rounded-bl-sm border border-white/5'}`}>
+
+                  {msg.sender === 'etudiant' ? (
+                    <p>{msg.contenu}</p>
+                  ) : (
+                    <div className="prose prose-invert prose-sm max-w-none
+                                    prose-p:my-1 prose-ul:my-1 prose-ol:my-1
+                                    prose-li:my-0.5 prose-strong:text-white
+                                    prose-headings:text-white prose-headings:font-display">
+                      <ReactMarkdown>{msg.contenu}</ReactMarkdown>
+                    </div>
+                  )}
+
+                  {/* Sources */}
                   {msg.sources && msg.sources.length > 0 && (
                     <div className="mt-3 pt-3 border-t border-white/10">
                       <p className="text-xs text-white/50 mb-1">📄 Sources :</p>
