@@ -55,3 +55,14 @@ def get_types():
     for t in types:
         t["_id"] = str(t["_id"])
     return jsonify(types), 200
+
+@data_bp.route("/specialite/<specialite_id>", methods=["GET"])
+def get_specialite(specialite_id):
+    from bson import ObjectId
+    
+    specialite = db["specialites"].find_one({"_id": ObjectId(specialite_id)})
+    if not specialite:
+        return jsonify({"error": "Spécialité introuvable"}), 404
+    
+    specialite["_id"] = str(specialite["_id"])
+    return jsonify(specialite), 200
