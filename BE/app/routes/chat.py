@@ -4,6 +4,7 @@ from app import db
 from app.middleware.auth_middleware import role_required
 from app.services.rag_service import answer_question
 import datetime
+from bson import ObjectId
 
 chat_bp = Blueprint("chat", __name__)
 
@@ -77,3 +78,23 @@ def get_messages(conversation_id):
         if "created_at" in m:
             m["created_at"] = m["created_at"].isoformat()
     return jsonify(messages), 200
+
+# Modifier le titre d'une conversation
+@chat_bp.route("/conversations/<conversation_id>", methods=["PATCH"])
+@role_required("etudiant")
+def update_conversation(conversation_id):
+    data = request.json
+    db["conversations"].update_one(
+        {"_id": ObjectId(conversation_id)},
+        {"$set": {"titre": data.get("titre")}}
+    )
+    return jsonify({"message": "Titre modifié"}), 200
+
+
+# Supprimer une conversation et ses messages
+@chat_bp.route("/conversations/<conversation_id>", methods=["DELETE"])
+@role_required("etudiant")
+def delete_conversation(conversation_id):
+    db["messages"].delete_many({"conversation_id": conversation_id})
+    db["conversations"].delete_one({"_id": ObjectId(conversation_id)})
+    return jsonify({"message": "Conversation supprimée"}), 200
