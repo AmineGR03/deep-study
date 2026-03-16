@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, memo } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { askQuestion } from '../../api/chatAPI'
 import axiosInstance from '../../api/axiosInstance'
@@ -9,25 +9,61 @@ import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import 'katex/dist/katex.min.css'
 
+function fixLatex(text) {
+  if (!text) return text
 
+  // Juste nettoyer les caractères unicode dans les blocs math
+  text = text.replace(/\$\$([\s\S]*?)\$\$/g, (_, inner) => {
+    return `$$\n${inner
+      .replace(/\u2011/g, '-')
+      .replace(/\u2013/g, '-')
+      .replace(/\u202F/g, ' ')
+      .trim()}\n$$`
+  })
 
+  text = text.replace(/\$([^$\n]+?)\$/g, (_, inner) => {
+    return `$${inner
+      .replace(/\u2011/g, '-')
+      .replace(/\u2013/g, '-')
+      .replace(/\u202F/g, ' ')
+    }$`
+  })
+
+  return text
+}
+
+const MessageContent = memo(({ content }) => (
+  <div className="prose prose-invert prose-sm max-w-none
+                  prose-p:my-1 prose-ul:my-1 prose-ol:my-1
+                  prose-li:my-0.5 prose-strong:text-white
+                  prose-headings:text-white prose-headings:font-display
+                  prose-table:text-xs prose-table:w-full
+                  prose-th:bg-white/10 prose-th:px-2 prose-th:py-1
+                  prose-td:px-2 prose-td:py-1 prose-td:border prose-td:border-white/10">
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm, remarkMath]}
+      rehypePlugins={[[rehypeKatex, { output: 'html', throwOnError: false, strict: false, trust: true }]]}
+    >
+      {fixLatex(content)}
+    </ReactMarkdown>
+  </div>
+))
 
 export default function ChatPage() {
   const { user } = useAuth()
 
-  const [messages, setMessages]             = useState([])
-  const [input, setInput]                   = useState('')
-  const [loading, setLoading]               = useState(false)
-  const [conversationId, setConversationId] = useState(
+  const [messages, setMessages]                 = useState([])
+  const [input, setInput]                       = useState('')
+  const [loading, setLoading]                   = useState(false)
+  const [conversationId, setConversationId]     = useState(
     () => localStorage.getItem('conversation_id') || null
   )
-  const [matieres, setMatieres]             = useState([])
+  const [matieres, setMatieres]                 = useState([])
   const [matieresFiltrees, setMatieresFiltrees] = useState([])
   const [selectedMatiere, setSelectedMatiere]   = useState('')
-  const [semestre, setSemestre]             = useState('')
+  const [semestre, setSemestre]                 = useState('')
   const bottomRef = useRef(null)
-
-  const location = useLocation()
+  const location  = useLocation()
 
   useEffect(() => {
     if (location.state?.conversation_id) {
@@ -119,37 +155,8 @@ export default function ChatPage() {
     setInput('')
   }
 
-function fixLatex(text) {
-  if (!text) return text
-
-  // 1. Normaliser $$$ → $$ (triple ou plus)
-  text = text.replace(/\${3,}/g, '$$')
-
-  // 2. \[ ... \] → $$ ... $$
-  text = text.replace(/\\\[([\s\S]*?)\\\]/g, (_, m) => `$$\n${m.trim()}\n$$`)
-
-  // 3. \( ... \) → $ ... $
-  text = text.replace(/\\\(([\s\S]*?)\\\)/g, (_, m) => `$${m.trim()}$`)
-
-  // 4. Nettoyer l'intérieur des blocs $$ ... $$ :
-  //    supprimer les $ parasites à l'intérieur
-  text = text.replace(/\$\$([\s\S]*?)\$\$/g, (_, inner) => {
-    const cleaned = inner.replace(/(?<!\$)\$(?!\$)/g, '').trim()
-    return `$$\n${cleaned}\n$$`
-  })
-
-  // 5. Wrapper les \begin{...}...\end{...} non encore entourés de $$
-  text = text.replace(
-    /(?<!\$\$\n?)(\\begin\{[^}]+\}[\s\S]*?\\end\{[^}]+\})(?!\n?\$\$)/g,
-    (_, m) => `$$\n${m.trim()}\n$$`
-  )
-
-  return text
-}
-
   return (
     <div className="animate-fade-up flex flex-col h-[calc(100vh-8rem)]">
-
 
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
@@ -234,20 +241,7 @@ function fixLatex(text) {
                   {msg.sender === 'etudiant' ? (
                     <p>{msg.contenu}</p>
                   ) : (
-                    <div className="prose prose-invert prose-sm max-w-none
-                                    prose-p:my-1 prose-ul:my-1 prose-ol:my-1
-                                    prose-li:my-0.5 prose-strong:text-white
-                                    prose-headings:text-white prose-headings:font-display
-                                    prose-table:text-xs prose-table:w-full
-                                    prose-th:bg-white/10 prose-th:px-2 prose-th:py-1
-                                    prose-td:px-2 prose-td:py-1 prose-td:border prose-td:border-white/10">
-                  <ReactMarkdown
-                  remarkPlugins={[remarkGfm, remarkMath]}
-                  rehypePlugins={[[rehypeKatex, { output: 'mathml' }]]}
-                >
-                  {fixLatex(msg.contenu)}
-                </ReactMarkdown>
-                    </div>
+                    <MessageContent content={msg.contenu} />
                   )}
 
                   {msg.sources && msg.sources.length > 0 && (

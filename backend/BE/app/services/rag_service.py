@@ -15,26 +15,40 @@ collection = chroma_client.get_or_create_collection("deepstudy_docs")
 
 # Groq config
 GROQ_API_KEY = Config.GROQ_API_KEY
-GROQ_MODEL   = "openai/gpt-oss-120b"
+GROQ_MODEL   = "llama-3.3-70b-versatile"
 
 ENV_PATTERN = r'(?:pmatrix|bmatrix|matrix|aligned|align|align\*|cases)'
+
 
 def fix_latex_delimiters(text: str) -> str:
     if not text:
         return text
 
-    # Seule chose utile à garder : unicode → LaTeX
     unicode_map = [
-        ('λ', r'$\lambda$'), ('σ', r'$\sigma$'), ('μ', r'$\mu$'),
-        ('α', r'$\alpha$'), ('β', r'$\beta$'), ('ρ', r'$\rho$'),
-        ('→', r'$\rightarrow$'), ('⟹', r'$\Longrightarrow$'),
-        ('×', r'$\times$'), ('≈', r'$\approx$'), ('≤', r'$\leq$'),
-        ('≥', r'$\geq$'), ('∑', r'$\sum$'), ('∈', r'$\in$'),
+        ('λ', r'\lambda'), ('σ', r'\sigma'), ('μ', r'\mu'),
+        ('α', r'\alpha'), ('β', r'\beta'), ('ρ', r'\rho'),
+        ('→', r'\rightarrow'), ('⟹', r'\Longrightarrow'),
+        ('×', r'\times'), ('≈', r'\approx'), ('≤', r'\leq'),
+        ('≥', r'\geq'), ('∑', r'\sum'), ('∈', r'\in'),
     ]
-    for char, latex in unicode_map:
-        text = text.replace(char, latex)
 
-    return text
+    # Splitter en blocs math et texte normal
+    parts = re.split(r'(\$\$[\s\S]*?\$\$|\$[^$\n]+?\$)', text)
+
+    result = []
+    for part in parts:
+        if part.startswith('$'):
+            # Bloc math — remplacer unicode sans wrapper $...$
+            for char, latex in unicode_map:
+                part = part.replace(char, latex)
+        else:
+            # Texte normal — wrapper avec $...$
+            for char, latex in unicode_map:
+                part = part.replace(char, f'${latex}$')
+        result.append(part)
+
+    return ''.join(result)
+
 
 def split_into_chunks(text: str, max_size: int = 1500, overlap: int = 150) -> list:
     paragraphs = [p.strip() for p in re.split(r'\n{2,}', text) if p.strip()]
@@ -139,6 +153,13 @@ def call_groq(system_prompt: str, messages: list) -> str:
 
 
 MATH_FORMAT_RULES = """
+For all mathematical expressions:
+- Use $...$ for inline math
+- Use $$...$$ for display/block math
+- Never use \\(...\\) or \\[...\\]
+- Never split a single expression across multiple $$ blocks
+- Never mix LaTeX with plain text inside $$ blocks
+
 RÈGLES STRICTES pour les formules mathématiques :
 - TOUJOURS utiliser $...$ pour les formules inline
 - TOUJOURS utiliser $$...$$ sur une ligne séparée pour les formules en bloc
