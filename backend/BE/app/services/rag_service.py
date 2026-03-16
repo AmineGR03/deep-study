@@ -1,172 +1,10 @@
-# import chromadb
-# from pypdf import PdfReader
-# from sentence_transformers import SentenceTransformer
-# from app.config import Config
-# import uuid
-# import ollama
-
-# # Embedding model (downloads automatically on first run)
-# embedder = SentenceTransformer("all-MiniLM-L6-v2")
-
-# # ChromaDB connection
-# chroma_client = chromadb.PersistentClient(path=Config.CHROMA_PATH)
-# collection = chroma_client.get_or_create_collection("deepstudy_docs")
-
-# # ── Ollama config ──
-# OLLAMA_MODEL = "qwen2.5:0.5b"  # Fix: qwen3.5:0.5b doesn't exist
-
-
-# def index_pdf(file_path: str, metadata: dict) -> list:
-#     """Extract, chunk, embed and index a PDF into ChromaDB."""
-#     reader = PdfReader(file_path)
-#     chunk_ids = []
-#     chunk_size = 500
-#     overlap = 50
-
-#     for page_num, page in enumerate(reader.pages):
-#         text = page.extract_text()
-#         if not text:
-#             continue
-
-#         start = 0
-#         while start < len(text):
-#             chunk_text = text[start:start + chunk_size].strip()
-#             if len(chunk_text) >= 50:
-#                 chunk_id = str(uuid.uuid4())
-#                 embedding = embedder.encode(chunk_text).tolist()
-#                 collection.add(
-#                     ids=[chunk_id],
-#                     embeddings=[embedding],
-#                     documents=[chunk_text],
-#                     metadatas=[{
-#                         **metadata,
-#                         "page": page_num + 1,
-#                         "file_path": file_path
-#                     }]
-#                 )
-#                 chunk_ids.append(chunk_id)
-#             start += chunk_size - overlap
-
-#     return chunk_ids
-
-
-# def is_doc_related_question(question: str) -> bool:
-#     """Heuristic to decide if the question is about school documents."""
-#     keywords = [
-#         "cours", "tp", "exam", "examen", "chapitre", "exercice",
-#         "résumé", "définition", "explique", "document", "pdf",
-#         "question", "réponse", "fiche", "module", "matière",
-#         "course", "chapter", "exercise", "summary", "definition", "explain"
-#     ]
-#     return any(kw in question.lower() for kw in keywords)
-
-
-# def answer_question(question: str, filters: dict, history: list = []) -> dict:
-#     """
-#     Route to RAG pipeline if question is doc-related,
-#     otherwise respond as a general-purpose chatbot.
-#     history: list of {"role": "user"/"assistant", "content": "..."} (last 10 messages)
-#     """
-#     # Keep only last 10 messages for context window
-#     recent_history = history[-10:] if history else []
-
-#     if not is_doc_related_question(question):
-#         answer = call_llm_general(question, recent_history)
-#         return {"answer": answer, "sources": [], "mode": "general"}
-
-#     # RAG mode
-#     question_embedding = embedder.encode(question).tolist()
-#     clean_filters = {k: v for k, v in filters.items() if v} if filters else None
-
-#     results = collection.query(
-#         query_embeddings=[question_embedding],
-#         n_results=5,
-#         where=clean_filters
-#     )
-
-#     docs = results["documents"][0]
-#     metas = results["metadatas"][0]
-#     distances = results["distances"][0] if "distances" in results else []
-
-#     SIMILARITY_THRESHOLD = 1.2
-#     filtered = [
-#         (doc, meta)
-#         for doc, meta, dist in zip(docs, metas, distances)
-#         if dist < SIMILARITY_THRESHOLD
-#     ] if distances else list(zip(docs, metas))
-
-#     if not filtered:
-#         return {
-#             "answer": "Aucun document pertinent trouvé pour cette question.",
-#             "sources": [],
-#             "mode": "rag"
-#         }
-
-#     context_parts = []
-#     sources = []
-#     for doc, meta in filtered:
-#         context_parts.append(f"[Page {meta['page']}] {doc}")
-#         sources.append({"page": meta["page"], "file": meta["file_path"]})
-
-#     context = "\n\n".join(context_parts)
-#     answer = call_llm_rag(question, context, recent_history)
-
-#     return {"answer": answer, "sources": sources, "mode": "rag"}
-
-
-# def call_llm_rag(question: str, context: str, history: list) -> str:
-#     """RAG-mode: answer based on document context + conversation history."""
-#     system_prompt = """Tu es un assistant pédagogique de l'EMSI.
-# Réponds uniquement en te basant sur le contexte extrait des cours fourni dans le premier message.
-# Si la réponse n'est pas dans le contexte, dis-le clairement.
-# Mentionne la page source quand c'est possible."""
-
-#     # Build messages: system + history + current question with context
-#     messages = [
-#         {"role": "system", "content": system_prompt},
-#         *history,
-#         {"role": "user", "content": f"Contexte :\n{context}\n\nQuestion : {question}"}
-#     ]
-
-#     try:
-#         response = ollama.chat(model=OLLAMA_MODEL, messages=messages)
-#         return response["message"]["content"]
-#     except ollama.ResponseError as e:
-#         return f"❌ Erreur Ollama : {str(e)} — vérifiez que le modèle est bien pulled : `ollama pull {OLLAMA_MODEL}`"
-#     except Exception as e:
-#         return f"❌ Erreur : {str(e)}"
-
-
-# def call_llm_general(question: str, history: list) -> str:
-#     """General-purpose mode: free conversation with history."""
-#     system_prompt = "Tu es un assistant intelligent et utile. Réponds de manière claire et concise."
-
-#     messages = [
-#         {"role": "system", "content": system_prompt},
-#         *history,
-#         {"role": "user", "content": question}
-#     ]
-
-#     try:
-#         response = ollama.chat(model=OLLAMA_MODEL, messages=messages)
-#         return response["message"]["content"]
-#     except ollama.ResponseError as e:
-#         return f"❌ Erreur Ollama : {str(e)} — vérifiez que le modèle est bien pulled : `ollama pull {OLLAMA_MODEL}`"
-#     except Exception as e:
-#         return f"❌ Erreur : {str(e)}"
-
-
-# def delete_document_vectors(chunk_ids: list):
-#     """Delete vectors for a document from ChromaDB."""
-#     if chunk_ids:
-#         collection.delete(ids=chunk_ids)
-
 import chromadb
-from pypdf import PdfReader
+import fitz
 from sentence_transformers import SentenceTransformer
 from app.config import Config
 import uuid
 import requests
+import re
 
 # Embedding model
 embedder = SentenceTransformer("all-MiniLM-L6-v2")
@@ -175,47 +13,83 @@ embedder = SentenceTransformer("all-MiniLM-L6-v2")
 chroma_client = chromadb.PersistentClient(path=Config.CHROMA_PATH)
 collection = chroma_client.get_or_create_collection("deepstudy_docs")
 
-# ── Groq config ──
+# Groq config
 GROQ_API_KEY = Config.GROQ_API_KEY
-GROQ_MODEL   = "llama-3.1-8b-instant"  # gratuit et rapide
+GROQ_MODEL   = "openai/gpt-oss-120b"
+
+ENV_PATTERN = r'(?:pmatrix|bmatrix|matrix|aligned|align|align\*|cases)'
+
+def fix_latex_delimiters(text: str) -> str:
+    if not text:
+        return text
+
+    # Seule chose utile à garder : unicode → LaTeX
+    unicode_map = [
+        ('λ', r'$\lambda$'), ('σ', r'$\sigma$'), ('μ', r'$\mu$'),
+        ('α', r'$\alpha$'), ('β', r'$\beta$'), ('ρ', r'$\rho$'),
+        ('→', r'$\rightarrow$'), ('⟹', r'$\Longrightarrow$'),
+        ('×', r'$\times$'), ('≈', r'$\approx$'), ('≤', r'$\leq$'),
+        ('≥', r'$\geq$'), ('∑', r'$\sum$'), ('∈', r'$\in$'),
+    ]
+    for char, latex in unicode_map:
+        text = text.replace(char, latex)
+
+    return text
+
+def split_into_chunks(text: str, max_size: int = 1500, overlap: int = 150) -> list:
+    paragraphs = [p.strip() for p in re.split(r'\n{2,}', text) if p.strip()]
+    chunks = []
+    current = ""
+
+    for para in paragraphs:
+        if len(current) + len(para) <= max_size:
+            current += "\n\n" + para if current else para
+        else:
+            if current:
+                chunks.append(current.strip())
+            current = para
+
+    if current:
+        chunks.append(current.strip())
+
+    return chunks
 
 
 def index_pdf(file_path: str, metadata: dict) -> list:
-    """Extract, chunk, embed and index a PDF into ChromaDB."""
-    reader = PdfReader(file_path)
+    doc = fitz.open(file_path)
     chunk_ids = []
-    chunk_size = 500
-    overlap = 50
 
-    for page_num, page in enumerate(reader.pages):
-        text = page.extract_text()
-        if not text:
+    for page_num, page in enumerate(doc):
+        text = page.get_text()
+        if not text or len(text.strip()) < 30:
             continue
 
-        start = 0
-        while start < len(text):
-            chunk_text = text[start:start + chunk_size].strip()
-            if len(chunk_text) >= 50:
-                chunk_id = str(uuid.uuid4())
-                embedding = embedder.encode(chunk_text).tolist()
-                collection.add(
-                    ids=[chunk_id],
-                    embeddings=[embedding],
-                    documents=[chunk_text],
-                    metadatas=[{
-                        **metadata,
-                        "page": page_num + 1,
-                        "file_path": file_path
-                    }]
-                )
-                chunk_ids.append(chunk_id)
-            start += chunk_size - overlap
+        has_table = len(page.find_tables().tables) > 0
+        chunks = [text.strip()] if has_table else split_into_chunks(text)
 
+        for chunk_text in chunks:
+            if len(chunk_text) < 50:
+                continue
+            chunk_id = str(uuid.uuid4())
+            embedding = embedder.encode(chunk_text).tolist()
+            collection.add(
+                ids=[chunk_id],
+                embeddings=[embedding],
+                documents=[chunk_text],
+                metadatas=[{
+                    **metadata,
+                    "page": page_num + 1,
+                    "file_path": file_path,
+                    "has_table": has_table
+                }]
+            )
+            chunk_ids.append(chunk_id)
+
+    print(f"✅ Indexed {len(chunk_ids)} chunks from {file_path}")
     return chunk_ids
 
 
 def is_doc_related_question(question: str) -> bool:
-    """Heuristic to decide if the question is about school documents."""
     keywords = [
         "cours", "tp", "exam", "examen", "chapitre", "exercice",
         "résumé", "définition", "explique", "document", "pdf",
@@ -226,11 +100,9 @@ def is_doc_related_question(question: str) -> bool:
 
 
 def call_groq(system_prompt: str, messages: list) -> str:
-    """Appel à l'API Groq."""
     if not GROQ_API_KEY:
         return "❌ Clé API Groq manquante — ajoutez GROQ_API_KEY dans .env"
 
-    # Groq utilise le format OpenAI — system dans messages
     groq_messages = [
         {"role": "system", "content": system_prompt},
         *[m for m in messages if m["role"] in ["user", "assistant"]]
@@ -246,10 +118,10 @@ def call_groq(system_prompt: str, messages: list) -> str:
             json={
                 "model":       GROQ_MODEL,
                 "messages":    groq_messages,
-                "max_tokens":  1024,
+                "max_tokens":  8192,
                 "temperature": 0.3,
             },
-            timeout=30
+            timeout=60
         )
         data = response.json()
 
@@ -266,78 +138,85 @@ def call_groq(system_prompt: str, messages: list) -> str:
         return f"❌ Erreur : {str(e)}"
 
 
-# def answer_question(question: str, filters: dict, history: list = []) -> dict:
-#     """Route to RAG pipeline or general chatbot."""
-#     recent_history = history[-10:] if history else []
+MATH_FORMAT_RULES = """
+RÈGLES STRICTES pour les formules mathématiques :
+- TOUJOURS utiliser $...$ pour les formules inline
+- TOUJOURS utiliser $$...$$ sur une ligne séparée pour les formules en bloc
+- NE JAMAIS utiliser \\[ \\] ou \\( \\)
+- NE JAMAIS écrire de symboles mathématiques en texte Unicode (ex: λ, σ, →, ×)
+- TOUJOURS écrire les symboles en LaTeX : $\\lambda$, $\\sigma$, $\\rightarrow$, $\\times$
+- NE JAMAIS mélanger du texte Unicode et du LaTeX dans la même expression
+- Exemple correct : La valeur propre $\\lambda_1 = 1.94$ est obtenue par...
+- Exemple correct bloc :
+$$
+\\lambda_{1,2} = \\frac{2 \\pm \\sqrt{4 - 4 \\cdot 0.11}}{2}
+$$"""
 
-#     if not is_doc_related_question(question):
-#         answer = call_llm_general(question, recent_history)
-#         return {"answer": answer, "sources": [], "mode": "general"}
 
-#     # RAG mode
-#     question_embedding = embedder.encode(question).tolist()
+def call_llm_rag(question: str, context: str, history: list) -> str:
+    system_prompt = f"""Tu es un assistant pédagogique de l'EMSI.
+Tu as accès à des extraits de cours, examens et TP de l'étudiant.
+Utilise le contexte fourni pour répondre. Si le contexte contient des exercices, détaille les solutions étape par étape avec toutes les formules et calculs.
+Si le contexte ne suffit pas, complète avec tes connaissances générales en le précisant.
+Cite toujours la page source entre crochets [Page X] quand c'est possible.
+Réponds toujours en français de manière complète et pédagogique.
+{MATH_FORMAT_RULES}"""
 
-#     non_empty = {k: v for k, v in filters.items() if v}
-#     if len(non_empty) == 0:
-#         clean_filters = None
-#     elif len(non_empty) == 1:
-#         clean_filters = non_empty
-#     else:
-#         clean_filters = {"$and": [{k: {"$eq": v}} for k, v in non_empty.items()]}
+    messages = [
+        *history,
+        {"role": "user", "content": f"Contexte :\n{context}\n\nQuestion : {question}"}
+    ]
 
-#     results = collection.query(
-#         query_embeddings=[question_embedding],
-#         n_results=5,
-#         where=clean_filters
-#     )
+    result = call_groq(system_prompt, messages)
+    return fix_latex_delimiters(result)
 
-#     docs      = results["documents"][0]
-#     metas     = results["metadatas"][0]
-#     distances = results["distances"][0] if "distances" in results else []
 
-#     SIMILARITY_THRESHOLD = 1.2
-#     filtered = [
-#         (doc, meta)
-#         for doc, meta, dist in zip(docs, metas, distances)
-#         if dist < SIMILARITY_THRESHOLD
-#     ] if distances else list(zip(docs, metas))
+def call_llm_general(question: str, history: list) -> str:
+    system_prompt = f"""Tu es un assistant pédagogique intelligent de l'EMSI.
+Réponds de manière claire, complète et pédagogique en français.
+{MATH_FORMAT_RULES}"""
 
-#     if not filtered:
-#         return {
-#             "answer": "Aucun document pertinent trouvé pour cette question.",
-#             "sources": [],
-#             "mode": "rag"
-#         }
+    messages = [
+        *history,
+        {"role": "user", "content": question}
+    ]
 
-#     context_parts = []
-#     sources = []
-#     for doc, meta in filtered:
-#         context_parts.append(f"[Page {meta['page']}] {doc}")
-#         sources.append({"page": meta["page"], "file": meta["file_path"]})
+    result = call_groq(system_prompt, messages)
+    return fix_latex_delimiters(result)
 
-#     context = "\n\n".join(context_parts)
-#     answer  = call_llm_rag(question, context, recent_history)
-
-#     return {"answer": answer, "sources": sources, "mode": "rag"}
 
 def answer_question(question: str, filters: dict, history: list = []) -> dict:
-    """Toujours utiliser le RAG — chercher dans les documents."""
     recent_history = history[-10:] if history else []
 
-    # Toujours chercher dans ChromaDB
+    greetings = ["hi", "hello", "bonjour", "salut", "slt", "bonsoir", "hey", "coucou"]
+    if len(question.strip().split()) <= 2 or question.strip().lower() in greetings:
+        answer = call_llm_general(question, recent_history)
+        return {"answer": answer, "sources": [], "mode": "general"}
+
+    if filters and any(filters.values()):
+        return _answer_rag(question, filters, recent_history)
+
+    if is_doc_related_question(question):
+        return _answer_rag(question, filters, recent_history)
+
+    answer = call_llm_general(question, recent_history)
+    return {"answer": answer, "sources": [], "mode": "general"}
+
+
+def _answer_rag(question: str, filters: dict, recent_history: list) -> dict:
     question_embedding = embedder.encode(question).tolist()
 
     non_empty = {k: v for k, v in filters.items() if v} if filters else {}
     if len(non_empty) == 0:
         clean_filters = None
     elif len(non_empty) == 1:
-        clean_filters = non_empty
+        clean_filters = {k: {"$eq": v} for k, v in non_empty.items()}
     else:
         clean_filters = {"$and": [{k: {"$eq": v}} for k, v in non_empty.items()]}
 
     results = collection.query(
         query_embeddings=[question_embedding],
-        n_results=5,
+        n_results=20,
         where=clean_filters
     )
 
@@ -345,19 +224,16 @@ def answer_question(question: str, filters: dict, history: list = []) -> dict:
     metas     = results["metadatas"][0]
     distances = results["distances"][0] if "distances" in results else []
 
-    SIMILARITY_THRESHOLD = 1.2
     filtered = [
         (doc, meta)
         for doc, meta, dist in zip(docs, metas, distances)
-        if dist < SIMILARITY_THRESHOLD
+        if dist < 2.0
     ] if distances else list(zip(docs, metas))
 
-    # Si aucun document pertinent trouvé → répondre en mode général
     if not filtered:
         answer = call_llm_general(question, recent_history)
         return {"answer": answer, "sources": [], "mode": "general"}
 
-    # Documents trouvés → répondre basé sur le contexte
     context_parts = []
     sources = []
     for doc, meta in filtered:
@@ -366,39 +242,9 @@ def answer_question(question: str, filters: dict, history: list = []) -> dict:
 
     context = "\n\n".join(context_parts)
     answer  = call_llm_rag(question, context, recent_history)
-
     return {"answer": answer, "sources": sources, "mode": "rag"}
-
-def call_llm_rag(question: str, context: str, history: list) -> str:
-    """RAG mode : réponse basée sur le contexte des documents."""
-    system_prompt = """Tu es un assistant pédagogique de l'EMSI.
-Réponds uniquement en te basant sur le contexte extrait des cours fourni.
-Si la réponse n'est pas dans le contexte, dis-le clairement.
-Mentionne la page source quand c'est possible.
-Réponds en français."""
-
-    messages = [
-        *history,
-        {"role": "user", "content": f"Contexte :\n{context}\n\nQuestion : {question}"}
-    ]
-
-    return call_groq(system_prompt, messages)
-
-
-def call_llm_general(question: str, history: list) -> str:
-    """Mode général : conversation libre."""
-    system_prompt = """Tu es un assistant pédagogique intelligent de l'EMSI.
-Réponds de manière claire et concise en français."""
-
-    messages = [
-        *history,
-        {"role": "user", "content": question}
-    ]
-
-    return call_groq(system_prompt, messages)
 
 
 def delete_document_vectors(chunk_ids: list):
-    """Delete vectors for a document from ChromaDB."""
     if chunk_ids:
         collection.delete(ids=chunk_ids)

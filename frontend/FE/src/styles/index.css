@@ -137,3 +137,7 @@ body {
     linear-gradient(90deg, rgba(52,120,246,0.04) 1px, transparent 1px);
   background-size: 40px 40px;
 }
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+}

@@ -4,6 +4,13 @@ import { askQuestion } from '../../api/chatAPI'
 import axiosInstance from '../../api/axiosInstance'
 import { useLocation } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
+import 'katex/dist/katex.min.css'
+
+
+
 
 export default function ChatPage() {
   const { user } = useAuth()
@@ -12,7 +19,7 @@ export default function ChatPage() {
   const [input, setInput]                   = useState('')
   const [loading, setLoading]               = useState(false)
   const [conversationId, setConversationId] = useState(
-    () => localStorage.getItem('conversation_id') || null  // ✅ restore on load
+    () => localStorage.getItem('conversation_id') || null
   )
   const [matieres, setMatieres]             = useState([])
   const [matieresFiltrees, setMatieresFiltrees] = useState([])
@@ -22,7 +29,6 @@ export default function ChatPage() {
 
   const location = useLocation()
 
-  // ✅ If coming from history page, override with that conversation
   useEffect(() => {
     if (location.state?.conversation_id) {
       const id = location.state.conversation_id
@@ -31,7 +37,6 @@ export default function ChatPage() {
     }
   }, [location])
 
-  // ✅ Load messages for the saved conversation on page load
   useEffect(() => {
     if (conversationId && messages.length === 0) {
       axiosInstance.get(`/chat/messages/${conversationId}`)
@@ -78,7 +83,6 @@ export default function ChatPage() {
         conversation_id: conversationId,
       })
 
-      // ✅ Save conversation_id to localStorage
       if (!conversationId) {
         setConversationId(result.conversation_id)
         localStorage.setItem('conversation_id', result.conversation_id)
@@ -108,7 +112,6 @@ export default function ChatPage() {
     }
   }
 
-  // ✅ Clear localStorage on new conversation
   function newConversation() {
     setMessages([])
     setConversationId(null)
@@ -116,8 +119,37 @@ export default function ChatPage() {
     setInput('')
   }
 
+function fixLatex(text) {
+  if (!text) return text
+
+  // 1. Normaliser $$$ → $$ (triple ou plus)
+  text = text.replace(/\${3,}/g, '$$')
+
+  // 2. \[ ... \] → $$ ... $$
+  text = text.replace(/\\\[([\s\S]*?)\\\]/g, (_, m) => `$$\n${m.trim()}\n$$`)
+
+  // 3. \( ... \) → $ ... $
+  text = text.replace(/\\\(([\s\S]*?)\\\)/g, (_, m) => `$${m.trim()}$`)
+
+  // 4. Nettoyer l'intérieur des blocs $$ ... $$ :
+  //    supprimer les $ parasites à l'intérieur
+  text = text.replace(/\$\$([\s\S]*?)\$\$/g, (_, inner) => {
+    const cleaned = inner.replace(/(?<!\$)\$(?!\$)/g, '').trim()
+    return `$$\n${cleaned}\n$$`
+  })
+
+  // 5. Wrapper les \begin{...}...\end{...} non encore entourés de $$
+  text = text.replace(
+    /(?<!\$\$\n?)(\\begin\{[^}]+\}[\s\S]*?\\end\{[^}]+\})(?!\n?\$\$)/g,
+    (_, m) => `$$\n${m.trim()}\n$$`
+  )
+
+  return text
+}
+
   return (
     <div className="animate-fade-up flex flex-col h-[calc(100vh-8rem)]">
+
 
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
@@ -125,7 +157,6 @@ export default function ChatPage() {
           <h1 className="ds-title text-2xl mb-1">Chat IA</h1>
           <p className="ds-muted">Posez vos questions sur vos cours</p>
         </div>
-        {/* ✅ New conversation button restored */}
         <button onClick={newConversation} className="ds-btn-outline text-sm">
           + Nouvelle conversation
         </button>
@@ -194,22 +225,6 @@ export default function ChatPage() {
                   ${msg.sender === 'etudiant' ? 'bg-primary-600 text-white' : 'bg-accent-600/30 text-accent-300'}`}>
                   {msg.sender === 'etudiant' ? '👤' : '🤖'}
                 </div>
-                {/* <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed
-                  ${msg.sender === 'etudiant'
-                    ? 'bg-primary-600 text-white rounded-br-sm'
-                    : 'bg-dark-700 text-white/90 rounded-bl-sm border border-white/5'}`}>
-                  {msg.contenu}
-                  {msg.sources && msg.sources.length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-white/10">
-                      <p className="text-xs text-white/50 mb-1">📄 Sources :</p>
-                      {msg.sources.map((s, j) => (
-                        <p key={j} className="text-xs text-accent-400">
-                          Page {s.page} — {s.file?.split('/').pop()}
-                        </p>
-                      ))}
-                    </div>
-                  )}
-                </div> */}
 
                 <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed
                   ${msg.sender === 'etudiant'
@@ -222,12 +237,19 @@ export default function ChatPage() {
                     <div className="prose prose-invert prose-sm max-w-none
                                     prose-p:my-1 prose-ul:my-1 prose-ol:my-1
                                     prose-li:my-0.5 prose-strong:text-white
-                                    prose-headings:text-white prose-headings:font-display">
-                      <ReactMarkdown>{msg.contenu}</ReactMarkdown>
+                                    prose-headings:text-white prose-headings:font-display
+                                    prose-table:text-xs prose-table:w-full
+                                    prose-th:bg-white/10 prose-th:px-2 prose-th:py-1
+                                    prose-td:px-2 prose-td:py-1 prose-td:border prose-td:border-white/10">
+                  <ReactMarkdown
+                  remarkPlugins={[remarkGfm, remarkMath]}
+                  rehypePlugins={[[rehypeKatex, { output: 'mathml' }]]}
+                >
+                  {fixLatex(msg.contenu)}
+                </ReactMarkdown>
                     </div>
                   )}
 
-                  {/* Sources */}
                   {msg.sources && msg.sources.length > 0 && (
                     <div className="mt-3 pt-3 border-t border-white/10">
                       <p className="text-xs text-white/50 mb-1">📄 Sources :</p>
