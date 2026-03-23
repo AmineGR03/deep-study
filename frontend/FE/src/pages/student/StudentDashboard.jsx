@@ -55,149 +55,13 @@ function ProfilAcademique({ user }) {
   )
 }
 
-function EditProfileModal({ user, onClose, onSaved }) {
-  const [email, setEmail]               = useState(user?.email || '')
-  const [filieres, setFilieres]         = useState([])
-  const [annees, setAnnees]             = useState([])
-  const [specialites, setSpecialites]   = useState([])
-  const [filiereId, setFiliereId]       = useState(user?.filiere_id || '')
-  const [anneeId, setAnneeId]           = useState(user?.annee_id || '')
-  const [specialiteId, setSpecialiteId] = useState(user?.specialite_id || '')
-  const [saving, setSaving]             = useState(false)
-  const [error, setError]               = useState('')
-
-  const selectedAnnee  = annees.find(a => a._id === anneeId)
-  const showFiliere    = !!anneeId && selectedAnnee?.niveau >= 3
-  const showSpecialite = showFiliere && !!filiereId && selectedAnnee?.niveau >= 4
-
-  useEffect(() => {
-    Promise.all([
-      axiosInstance.get('/data/filieres'),
-      axiosInstance.get('/data/annees'),
-    ]).then(([f, a]) => {
-      setFilieres(f.data)
-      setAnnees(a.data)
-    }).catch(() => {})
-  }, [])
-
-  useEffect(() => {
-    if (!filiereId) return setSpecialites([])
-    axiosInstance.get(`/data/specialites/${filiereId}`)
-      .then(r => setSpecialites(r.data))
-      .catch(() => setSpecialites([]))
-  }, [filiereId])
-
-  function handleAnneeChange(e) {
-    setAnneeId(e.target.value)
-    setFiliereId('')
-    setSpecialiteId('')
-  }
-
-  function handleFiliereChange(e) {
-    setFiliereId(e.target.value)
-    setSpecialiteId('')
-  }
-
-  async function handleSave() {
-    if (!email.trim()) return setError('Email requis')
-    setSaving(true)
-    setError('')
-    try {
-      await axiosInstance.put('/auth/me', {
-        email:         email.trim(),
-        filiere_id:    showFiliere    ? (filiereId    || null) : null,
-        annee_id:      anneeId        || null,
-        specialite_id: showSpecialite ? (specialiteId || null) : null,
-      })
-      await onSaved()
-      onClose()
-    } catch (e) {
-      setError(e.response?.data?.error || 'Erreur lors de la mise à jour')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="ds-card w-full max-w-md p-6">
-
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="ds-title text-lg">Modifier le profil</h2>
-          <button onClick={onClose} className="text-dark-500 hover:text-white transition-colors text-xl">✕</button>
-        </div>
-
-        <div className="space-y-4">
-
-          <div>
-            <label className="ds-label text-xs">Adresse email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="ds-input w-full"
-              placeholder="votre@email.ma"
-            />
-          </div>
-
-          <div>
-            <label className="ds-label text-xs">Année</label>
-            <select value={anneeId} onChange={handleAnneeChange} className="ds-input w-full">
-              <option value="">— Sélectionner —</option>
-              {annees.map(a => (
-                <option key={a._id} value={a._id}>{a.niveau}ème année</option>
-              ))}
-            </select>
-          </div>
-
-          {showFiliere && (
-            <div>
-              <label className="ds-label text-xs">Filière</label>
-              <select value={filiereId} onChange={handleFiliereChange} className="ds-input w-full">
-                <option value="">— Sélectionner —</option>
-                {filieres.map(f => (
-                  <option key={f._id} value={f._id}>{f.nom}</option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {showSpecialite && (
-            <div>
-              <label className="ds-label text-xs">Spécialité</label>
-              <select value={specialiteId} onChange={e => setSpecialiteId(e.target.value)} className="ds-input w-full">
-                <option value="">— Sélectionner —</option>
-                {specialites.map(s => (
-                  <option key={s._id} value={s._id}>{s.nom}</option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {error && <p className="text-red-400 text-xs">{error}</p>}
-
-        </div>
-
-        <div className="flex gap-3 mt-6">
-          <button onClick={onClose} className="ds-btn-outline flex-1 text-sm">Annuler</button>
-          <button onClick={handleSave} disabled={saving} className="ds-btn-primary flex-1 text-sm disabled:opacity-40">
-            {saving ? 'Enregistrement...' : 'Enregistrer'}
-          </button>
-        </div>
-
-      </div>
-    </div>
-  )
-}
-
 export default function StudentDashboard() {
-  const { user, refreshProfile } = useAuth()
+  const { user } = useAuth()
 
   const [stats, setStats]             = useState(null)
   const [recentConvs, setRecentConvs] = useState([])
   const [recentDocs, setRecentDocs]   = useState([])
   const [loading, setLoading]         = useState(true)
-  const [showEdit, setShowEdit]       = useState(false)
 
   useEffect(() => {
     async function loadDashboard() {
@@ -232,31 +96,15 @@ export default function StudentDashboard() {
   return (
     <div className="animate-fade-up">
 
-      {showEdit && (
-        <EditProfileModal
-          user={user}
-          onClose={() => setShowEdit(false)}
-          onSaved={refreshProfile}
-        />
-      )}
-
       {/* Header */}
-      <div className="mb-8 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="ds-title text-2xl mb-1">
-            Bonjour, {user?.prenom} {user?.nom} 👋
-          </h1>
-          <p className="ds-muted text-sm">{user?.email}</p>
-          <p className="ds-muted text-xs mt-0.5">
-            Bienvenue sur DeepStudy — votre assistant pédagogique IA
-          </p>
-        </div>
-        <button
-          onClick={() => setShowEdit(true)}
-          className="ds-btn-outline text-xs shrink-0 mt-1"
-        >
-          ✏️ Modifier le profil
-        </button>
+      <div className="mb-8">
+        <h1 className="ds-title text-2xl mb-1">
+          Bonjour, {user?.prenom} {user?.nom} 👋
+        </h1>
+        <p className="ds-muted text-sm">{user?.email}</p>
+        <p className="ds-muted text-xs mt-0.5">
+          Bienvenue sur DeepStudy — votre assistant pédagogique IA
+        </p>
       </div>
 
       {loading ? (

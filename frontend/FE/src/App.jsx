@@ -13,6 +13,9 @@ import ChatPage from './pages/student/ChatPage'
 import HistoryPage from './pages/student/HistoryPage'
 import StudentDashboard from './pages/student/StudentDashboard'
 
+// Pages communes
+import ProfilePage from './pages/common/ProfilePage'
+
 // Pages Professeur
 import ProfessorDashboard  from './pages/professor/ProfessorDashboard'
 import ManageDocumentsPage from './pages/professor/ManageDocumentsPage'
@@ -82,6 +85,11 @@ export default function App() {
           }/>
           <Route path="/student/history" element={
             <PrivatePage roles={['etudiant']}><HistoryPage /></PrivatePage>
+          }/>
+
+          {/* ── Profil (Commun) ── */}
+          <Route path="/profile" element={
+            <PrivatePage roles={['etudiant', 'professeur', 'admin']}><ProfilePage /></PrivatePage>
           }/>
 
           {/* ── Professeur ── */}
