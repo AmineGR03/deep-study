@@ -21,7 +21,8 @@ def upload():
     file = request.files.get("file")
     if not file or not allowed_file(file.filename):
         return jsonify({"error": "Fichier invalide"}), 400
-
+    
+      
     metadata = {
         "matiere_id": request.form.get("matiere_id", ""),
         "filiere_id": request.form.get("filiere_id", ""),
@@ -47,6 +48,8 @@ def upload():
         "file_path": save_path,
         "chunk_ids": chunk_ids,
         "created_at": datetime.datetime.utcnow(),
+        "uploaded_by": get_jwt_identity(),
+    
         **metadata
     }
     result = db["ressources"].insert_one(doc)
