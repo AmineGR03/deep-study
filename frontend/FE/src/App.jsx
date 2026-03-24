@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { ThemeProvider } from './context/ThemeContext'
 import ProtectedRoute from './components/layout/ProtectedRoute'
 import AppLayout from './components/layout/AppLayout'
 
@@ -30,9 +31,10 @@ import ManageMatieresPage    from './pages/admin/ManageMatieresPage'
 import ManageTypesPage       from './pages/admin/ManageTypesPage'
 // import DocumentsListPage     from './pages/professor/DocumentsListPage'
 
+
 // Placeholders
 const HomePage           = () => (
-  <div className="min-h-screen bg-dark-900 bg-grid flex items-center justify-center">
+  <div className="min-h-screen bg-grid flex items-center justify-center">
     <div className="text-center animate-fade-up">
       <h1 className="font-display text-5xl font-bold text-white mb-4">
         Deep<span className="text-primary-500">Study</span>
@@ -65,71 +67,73 @@ function PrivatePage({ roles, children }) {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* ── Publiques ── */}
-          <Route path="/"         element={<HomePage />} />
-          <Route path="/login"    element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+    <ThemeProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* ── Publiques ── */}
+              <Route path="/"         element={<HomePage />} />
+            <Route path="/login"    element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
 
-          {/* ── Étudiant ── */}
-          <Route path="/student" element={
-            <PrivatePage roles={['etudiant']}><StudentDashboard /></PrivatePage>
-          }/>
-          <Route path="/student/library" element={
-            <PrivatePage roles={['etudiant']}><LibraryPage /></PrivatePage>
-          }/>
-          <Route path="/student/chat" element={
-            <PrivatePage roles={['etudiant']}><ChatPage /></PrivatePage>
-          }/>
-          <Route path="/student/history" element={
-            <PrivatePage roles={['etudiant']}><HistoryPage /></PrivatePage>
-          }/>
+            {/* ── Étudiant ── */}
+            <Route path="/student" element={
+              <PrivatePage roles={['etudiant']}><StudentDashboard /></PrivatePage>
+            }/>
+            <Route path="/student/library" element={
+              <PrivatePage roles={['etudiant']}><LibraryPage /></PrivatePage>
+            }/>
+            <Route path="/student/chat" element={
+              <PrivatePage roles={['etudiant']}><ChatPage /></PrivatePage>
+            }/>
+            <Route path="/student/history" element={
+              <PrivatePage roles={['etudiant']}><HistoryPage /></PrivatePage>
+            }/>
 
-          {/* ── Profil (Commun) ── */}
-          <Route path="/profile" element={
-            <PrivatePage roles={['etudiant', 'professeur', 'admin']}><ProfilePage /></PrivatePage>
-          }/>
+            {/* ── Profil (Commun) ── */}
+            <Route path="/profile" element={
+              <PrivatePage roles={['etudiant', 'professeur', 'admin']}><ProfilePage /></PrivatePage>
+            }/>
 
-          {/* ── Professeur ── */}
-          <Route path="/professor" element={
-            <PrivatePage roles={['professeur']}><ProfessorDashboard /></PrivatePage>
-          }/>
-          <Route path="/professor/upload" element={
-            <PrivatePage roles={['professeur', 'admin']}><ManageDocumentsPage /></PrivatePage>
-          }/>
-          <Route path="/professor/documents" element={
-            <PrivatePage roles={['professeur', 'admin']}><DocumentsListPage /></PrivatePage>
-          }/>
+            {/* ── Professeur ── */}
+            <Route path="/professor" element={
+              <PrivatePage roles={['professeur']}><ProfessorDashboard /></PrivatePage>
+            }/>
+            <Route path="/professor/upload" element={
+              <PrivatePage roles={['professeur', 'admin']}><ManageDocumentsPage /></PrivatePage>
+            }/>
+            <Route path="/professor/documents" element={
+              <PrivatePage roles={['professeur', 'admin']}><DocumentsListPage /></PrivatePage>
+            }/>
 
-          {/* ── Admin ── */}
-          <Route path="/admin" element={
-            <PrivatePage roles={['admin']}><AdminDashboard /></PrivatePage>
-          }/>
-          <Route path="/admin/users" element={
-            <PrivatePage roles={['admin']}><ManageUsersPage /></PrivatePage>
-          }/>
-          <Route path="/admin/filieres" element={
-            <PrivatePage roles={['admin']}><ManageFilieresPage /></PrivatePage>
-          }/>
-          <Route path="/admin/specialites" element={
-            <PrivatePage roles={['admin']}><ManageSpecialitesPage /></PrivatePage>
-          }/>
-          <Route path="/admin/matieres" element={
-            <PrivatePage roles={['admin']}><ManageMatieresPage /></PrivatePage>
-          }/>
-          <Route path="/admin/types" element={
-            <PrivatePage roles={['admin']}><ManageTypesPage /></PrivatePage>
-          }/>
-          <Route path="/admin/documents" element={
-            <PrivatePage roles={['admin', 'professeur']}><DocumentsListPage /></PrivatePage>
-          }/>
+            {/* ── Admin ── */}
+            <Route path="/admin" element={
+              <PrivatePage roles={['admin']}><AdminDashboard /></PrivatePage>
+            }/>
+            <Route path="/admin/users" element={
+              <PrivatePage roles={['admin']}><ManageUsersPage /></PrivatePage>
+            }/>
+            <Route path="/admin/filieres" element={
+              <PrivatePage roles={['admin']}><ManageFilieresPage /></PrivatePage>
+            }/>
+            <Route path="/admin/specialites" element={
+              <PrivatePage roles={['admin']}><ManageSpecialitesPage /></PrivatePage>
+            }/>
+            <Route path="/admin/matieres" element={
+              <PrivatePage roles={['admin']}><ManageMatieresPage /></PrivatePage>
+            }/>
+            <Route path="/admin/types" element={
+              <PrivatePage roles={['admin']}><ManageTypesPage /></PrivatePage>
+            }/>
+            <Route path="/admin/documents" element={
+              <PrivatePage roles={['admin', 'professeur']}><DocumentsListPage /></PrivatePage>
+            }/>
 
-          {/* ── Fallback ── */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+            {/* ── Fallback ── */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   )
 }

@@ -12,7 +12,6 @@ import 'katex/dist/katex.min.css'
 function fixLatex(text) {
   if (!text) return text
 
-  // Juste nettoyer les caractères unicode dans les blocs math
   text = text.replace(/\$\$([\s\S]*?)\$\$/g, (_, inner) => {
     return `$$\n${inner
       .replace(/\u2011/g, '-')
@@ -33,13 +32,18 @@ function fixLatex(text) {
 }
 
 const MessageContent = memo(({ content }) => (
-  <div className="prose prose-invert prose-sm max-w-none
+  <div className="prose prose-sm max-w-none
                   prose-p:my-1 prose-ul:my-1 prose-ol:my-1
-                  prose-li:my-0.5 prose-strong:text-white
-                  prose-headings:text-white prose-headings:font-display
+                  prose-li:my-0.5
                   prose-table:text-xs prose-table:w-full
-                  prose-th:bg-white/10 prose-th:px-2 prose-th:py-1
-                  prose-td:px-2 prose-td:py-1 prose-td:border prose-td:border-white/10">
+                  prose-th:px-2 prose-th:py-1
+                  prose-td:px-2 prose-td:py-1 prose-td:border prose-td:border-white/10
+                  dark:prose-invert
+                  dark:prose-headings:text-white
+                  dark:prose-strong:text-white
+                  prose-headings:text-gray-800
+                  prose-strong:text-gray-900
+                  prose-a:text-primary-500">
     <ReactMarkdown
       remarkPlugins={[remarkGfm, remarkMath]}
       rehypePlugins={[[rehypeKatex, { output: 'html', throwOnError: false, strict: false, trust: true }]]}
@@ -228,15 +232,20 @@ export default function ChatPage() {
           <div key={i} className={`flex ${msg.sender === 'etudiant' ? 'justify-end' : 'justify-start'}`}>
             <div className="max-w-[75%]">
               <div className={`flex items-end gap-2 ${msg.sender === 'etudiant' ? 'flex-row-reverse' : 'flex-row'}`}>
+
+                {/* Avatar */}
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs shrink-0
-                  ${msg.sender === 'etudiant' ? 'bg-primary-600 text-white' : 'bg-accent-600/30 text-accent-300'}`}>
+                  ${msg.sender === 'etudiant'
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-accent-600/30 text-accent-300'}`}>
                   {msg.sender === 'etudiant' ? '👤' : '🤖'}
                 </div>
 
+                {/* Bulle */}
                 <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed
                   ${msg.sender === 'etudiant'
                     ? 'bg-primary-600 text-white rounded-br-sm'
-                    : 'bg-dark-700 text-white/90 rounded-bl-sm border border-white/5'}`}>
+                    : 'bg-dark-700 dark:text-white/90 text-gray-800 rounded-bl-sm border border-white/5'}`}>
 
                   {msg.sender === 'etudiant' ? (
                     <p>{msg.contenu}</p>
@@ -244,6 +253,7 @@ export default function ChatPage() {
                     <MessageContent content={msg.contenu} />
                   )}
 
+                  {/* Sources */}
                   {msg.sources && msg.sources.length > 0 && (
                     <div className="mt-3 pt-3 border-t border-white/10">
                       <p className="text-xs text-white/50 mb-1">📄 Sources :</p>
@@ -255,15 +265,19 @@ export default function ChatPage() {
                     </div>
                   )}
                 </div>
+
               </div>
             </div>
           </div>
         ))}
 
+        {/* Typing indicator */}
         {loading && (
           <div className="flex justify-start">
             <div className="flex items-end gap-2">
-              <div className="w-7 h-7 rounded-full bg-accent-600/30 text-accent-300 flex items-center justify-center text-xs">🤖</div>
+              <div className="w-7 h-7 rounded-full bg-accent-600/30 text-accent-300 flex items-center justify-center text-xs">
+                🤖
+              </div>
               <div className="bg-dark-700 border border-white/5 px-4 py-3 rounded-2xl rounded-bl-sm">
                 <div className="flex gap-1 items-center">
                   <span className="w-2 h-2 bg-accent-400 rounded-full animate-bounce" style={{animationDelay: '0ms'}} />
@@ -274,6 +288,7 @@ export default function ChatPage() {
             </div>
           </div>
         )}
+
         <div ref={bottomRef} />
       </div>
 

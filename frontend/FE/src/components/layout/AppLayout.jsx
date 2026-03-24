@@ -40,7 +40,7 @@ export default function AppLayout({ children }) {
   }
 
   return (
-    <div className="min-h-screen bg-dark-900">
+    <div className="min-h-screen">
 
       <Navbar onToggleSidebar={toggleSidebar} />
 

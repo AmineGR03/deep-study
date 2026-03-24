@@ -197,12 +197,12 @@ export default function ManageDocumentsPage() {
   const [uploadMsg, setUploadMsg]     = useState('')
   const [uploadError, setUploadError] = useState('')
 
-  const [filieres, setFilieres]           = useState([])
-  const [annees, setAnnees]               = useState([])
-  const [tousLesMatieres, setTousLesMatieres] = useState([])
+  const [filieres, setFilieres]                 = useState([])
+  const [annees, setAnnees]                     = useState([])
+  const [tousLesMatieres, setTousLesMatieres]   = useState([])
   const [matieresFiltrees, setMatieresFiltrees] = useState([])
-  const [types, setTypes]                 = useState([])
-  const [semestre, setSemestre]           = useState('')
+  const [types, setTypes]                       = useState([])
+  const [semestre, setSemestre]                 = useState('')
 
   useEffect(() => {
     axiosInstance.get('/data/filieres').then(r => setFilieres(r.data)).catch(() => {})
@@ -217,7 +217,6 @@ export default function ManageDocumentsPage() {
     })
   }, [])
 
-  // Charger matières quand filière ou année change
   useEffect(() => {
     if (form.filiere_id) {
       axiosInstance.get('/data/matieres', {
@@ -235,7 +234,6 @@ export default function ManageDocumentsPage() {
     setForm(prev => ({ ...prev, matiere_id: '' }))
   }, [form.filiere_id, form.annee_id])
 
-  // Filtrer les matières par semestre
   useEffect(() => {
     if (semestre) {
       setMatieresFiltrees(tousLesMatieres.filter(m => String(m.semestre) === semestre))
@@ -294,32 +292,47 @@ export default function ManageDocumentsPage() {
 
       <div className="ds-card p-6">
 
+        {/* Message succès */}
         {uploadMsg && (
-          <div className="bg-accent-500/10 border border-accent-500/30 text-accent-300 text-sm px-4 py-3 rounded-xl mb-5">
+          <div className="bg-accent-500/10 border border-accent-500/30 text-accent-500
+                          text-sm px-4 py-3 rounded-xl mb-5">
             {uploadMsg}
           </div>
         )}
+
+        {/* Message erreur */}
         {uploadError && (
-          <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-xl mb-5">
+          <div className="bg-red-500/10 border border-red-500/30 text-red-500
+                          text-sm px-4 py-3 rounded-xl mb-5">
             {uploadError}
           </div>
         )}
 
-        <form onSubmit={handleUpload} className="space-y-4">
+        <form onSubmit={handleUpload} className="space-y-5">
 
           {/* Titre */}
           <div>
             <label className="ds-label">Titre du document</label>
-            <input name="titre" value={form.titre} onChange={handleChange}
-              placeholder="Ex: Cours Réseaux Chapitre 3" className="ds-input" />
+            <input
+              name="titre"
+              value={form.titre}
+              onChange={handleChange}
+              placeholder="Ex: Cours Réseaux Chapitre 3"
+              className="ds-input"
+            />
           </div>
 
           {/* Filière + Année */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="ds-label">Filière</label>
-              <select name="filiere_id" value={form.filiere_id}
-                onChange={handleChange} className="ds-input" required>
+              <select
+                name="filiere_id"
+                value={form.filiere_id}
+                onChange={handleChange}
+                className="ds-input"
+                required
+              >
                 <option value="">-- Choisir --</option>
                 {filieres.map(f => (
                   <option key={f._id} value={f._id}>{f.nom}</option>
@@ -328,8 +341,13 @@ export default function ManageDocumentsPage() {
             </div>
             <div>
               <label className="ds-label">Année</label>
-              <select name="annee_id" value={form.annee_id}
-                onChange={handleChange} className="ds-input" required>
+              <select
+                name="annee_id"
+                value={form.annee_id}
+                onChange={handleChange}
+                className="ds-input"
+                required
+              >
                 <option value="">-- Choisir --</option>
                 {annees.map(a => (
                   <option key={a._id} value={a._id}>{a.label}</option>
@@ -342,9 +360,12 @@ export default function ManageDocumentsPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="ds-label">Semestre</label>
-              <select value={semestre} onChange={e => setSemestre(e.target.value)}
+              <select
+                value={semestre}
+                onChange={e => setSemestre(e.target.value)}
                 className="ds-input"
-                disabled={!form.filiere_id || !form.annee_id}>
+                disabled={!form.filiere_id || !form.annee_id}
+              >
                 <option value="">-- Tous --</option>
                 <option value="1">Semestre 1</option>
                 <option value="2">Semestre 2</option>
@@ -357,9 +378,13 @@ export default function ManageDocumentsPage() {
                   ({matieresFiltrees.length})
                 </span>
               </label>
-              <select name="matiere_id" value={form.matiere_id}
-                onChange={handleChange} className="ds-input"
-                disabled={!form.filiere_id}>
+              <select
+                name="matiere_id"
+                value={form.matiere_id}
+                onChange={handleChange}
+                className="ds-input"
+                disabled={!form.filiere_id}
+              >
                 <option value="">-- Choisir --</option>
                 {matieresFiltrees.map(m => (
                   <option key={m._id} value={m._id}>{m.nom}</option>
@@ -371,8 +396,13 @@ export default function ManageDocumentsPage() {
           {/* Type */}
           <div>
             <label className="ds-label">Type</label>
-            <select name="type" value={form.type}
-              onChange={handleChange} className="ds-input" required>
+            <select
+              name="type"
+              value={form.type}
+              onChange={handleChange}
+              className="ds-input"
+              required
+            >
               {types.map(t => (
                 <option key={t._id} value={t.nom}>{t.nom}</option>
               ))}
@@ -382,26 +412,50 @@ export default function ManageDocumentsPage() {
           {/* Fichier */}
           <div>
             <label className="ds-label">Fichier (PDF, DOCX, PPTX, TXT)</label>
-            <input id="file-input" type="file"
+            <input
+              id="file-input"
+              type="file"
               accept=".pdf,.docx,.pptx,.txt"
               onChange={e => setFile(e.target.files[0])}
-              className="ds-input py-2 file:mr-3 file:py-1 file:px-3 file:rounded-lg
-                         file:border-0 file:bg-primary-600/30 file:text-primary-300
-                         file:text-xs file:cursor-pointer cursor-pointer"
-              required />
+              className="ds-input py-2 cursor-pointer
+                         file:mr-3 file:py-1.5 file:px-4
+                         file:rounded-lg file:border-0
+                         file:bg-primary-500 file:text-white
+                         file:text-xs file:font-medium
+                         file:cursor-pointer
+                         file:transition-all
+                         file:hover:bg-primary-400"
+              required
+            />
             {file && (
-              <p className="text-xs text-accent-400 mt-1">
-                ✅ {file.name} ({(file.size / 1024 / 1024).toFixed(2)} Mo)
-              </p>
+              <div className="mt-2 flex items-center gap-2 text-xs text-accent-500">
+                <span>✅</span>
+                <span className="font-medium">{file.name}</span>
+                <span className="text-dark-500">
+                  ({(file.size / 1024 / 1024).toFixed(2)} Mo)
+                </span>
+              </div>
             )}
           </div>
 
-          <button type="submit" disabled={uploading}
-            className="ds-btn-primary flex items-center gap-2">
-            {uploading
-              ? <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Indexation en cours...</>
-              : '📤 Uploader et indexer'}
+          {/* Bouton submit */}
+          <button
+            type="submit"
+            disabled={uploading}
+            className="ds-btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {uploading ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Indexation en cours...
+              </>
+            ) : (
+              <>
+                📤 Uploader et indexer
+              </>
+            )}
           </button>
+
         </form>
       </div>
     </div>

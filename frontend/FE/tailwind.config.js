@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: [
     "./index.html",
     "./src/**/*.{js,jsx}",
@@ -8,16 +9,16 @@ export default {
     extend: {
       colors: {
         primary: {
-          50:  '#eef6ff',
-          100: '#d9eaff',
-          300: '#8ebeff',
-          400: '#5a9bff',
-          500: '#3478f6',
-          600: '#1a5ce8',
-          700: '#1447cc',
-          800: '#163aa6',
-          900: '#183483',
-          950: '#121f50',
+          50:  '#f0f6ff',
+          100: '#deeaff',
+          300: '#a8c8ff',
+          400: '#74aaff',
+          500: '#4d8ef0',
+          600: '#3070d6',
+          700: '#2258b0',
+          800: '#1a4490',
+          900: '#133070',
+          950: '#0c1f4a',
         },
         accent: {
           300: '#72e2b5',
@@ -39,7 +40,7 @@ export default {
         mono:    ['"JetBrains Mono"', 'monospace'],
       },
       boxShadow: {
-        'glow':  '0 0 30px rgba(52, 120, 246, 0.25)',
+        'glow':  '0 0 30px rgba(77, 142, 240, 0.2)',
         'card':  '0 4px 24px rgba(0,0,0,0.3)',
       },
     },
@@ -47,5 +48,4 @@ export default {
   plugins: [
     require('@tailwindcss/typography'),
   ],
-
 }
