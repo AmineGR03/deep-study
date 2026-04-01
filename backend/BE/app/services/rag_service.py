@@ -205,7 +205,6 @@ Réponds de manière claire, complète et pédagogique en français.
     result = call_groq(system_prompt, messages)
     return fix_latex_delimiters(result)
 
-
 def answer_question(question: str, filters: dict, history: list = []) -> dict:
     recent_history = history[-10:] if history else []
 
@@ -214,12 +213,11 @@ def answer_question(question: str, filters: dict, history: list = []) -> dict:
         answer = call_llm_general(question, recent_history)
         return {"answer": answer, "sources": [], "mode": "general"}
 
-    if filters and any(filters.values()):
+    # RAG seulement si une matière est explicitement sélectionnée
+    if filters and filters.get("matiere_id"):
         return _answer_rag(question, filters, recent_history)
 
-    if is_doc_related_question(question):
-        return _answer_rag(question, filters, recent_history)
-
+    # Sinon toujours général, jamais de sources
     answer = call_llm_general(question, recent_history)
     return {"answer": answer, "sources": [], "mode": "general"}
 

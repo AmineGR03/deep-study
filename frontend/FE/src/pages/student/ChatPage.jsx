@@ -119,7 +119,7 @@ export default function ChatPage() {
       const result = await askQuestion({
         question,
         filiere_id:      user?.filiere_id || '',
-        matiere_id:      selectedMatiere,
+        matiere_id:      selectedMatiere || null ,
         conversation_id: conversationId,
       })
 
@@ -131,7 +131,7 @@ export default function ChatPage() {
       setMessages(prev => [...prev, {
         sender:  'assistant',
         contenu: result.answer,
-        sources: result.sources,
+        sources: (result.mode === 'rag' && selectedMatiere) ? (result.sources || []) : [],
       }])
 
     } catch {

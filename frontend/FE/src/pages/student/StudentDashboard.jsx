@@ -22,12 +22,10 @@ function ProfilAcademique({ user }) {
 
         setAnnee(foundAnnee ? `${foundAnnee.niveau}ème année` : '')
 
-        // Only show filière if année >= 3
         if (foundAnnee?.niveau >= 3 && foundFiliere) {
           setFiliere(foundFiliere.nom)
         }
 
-        // Only show spécialité if année >= 4
         if (foundAnnee?.niveau >= 4 && user.specialite_id) {
           const specRes = await axiosInstance.get(`/data/specialite/${user.specialite_id}`)
           setSpecialite(specRes.data.nom)
@@ -88,9 +86,9 @@ export default function StudentDashboard() {
   }, [user])
 
   const quickLinks = [
-    { to: '/student/library', icon: '📂', label: 'Bibliothèque', desc: 'Accéder aux ressources',   color: 'hover:border-primary-500/30' },
-    { to: '/student/chat',    icon: '🤖', label: 'Chat IA',       desc: 'Poser une question',       color: 'hover:border-accent-500/30'  },
-    { to: '/student/history', icon: '🕓', label: 'Historique',    desc: 'Revoir vos conversations', color: 'hover:border-purple-500/30'  },
+    { to: '/student/library', icon: '📚', label: 'Bibliothèque', desc: 'Accéder aux ressources',   color: 'hover:border-primary-500/30' },
+    { to: '/student/chat',    icon: '🤖', label: 'Chat IA',      desc: 'Poser une question',       color: 'hover:border-accent-500/30'  },
+    { to: '/student/history', icon: '🕓', label: 'Historique',   desc: 'Revoir vos conversations', color: 'hover:border-purple-500/30'  },
   ]
 
   return (
@@ -116,15 +114,14 @@ export default function StudentDashboard() {
           {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
 
-            {/* Profil académique */}
             <div className="ds-card p-5 animate-fade-up-delay-3">
-              <div className="text-3xl mb-2">🎓</div>
+              <p className="text-2xl mb-2">🎓</p>
               <ProfilAcademique key={`${user?.annee_id}-${user?.filiere_id}-${user?.specialite_id}`} user={user} />
               <p className="ds-muted text-sm mt-1">Profil académique</p>
             </div>
 
             <div className="ds-card p-5 animate-fade-up-delay-1">
-              <div className="text-3xl mb-2">💬</div>
+              <p className="text-2xl mb-2">💬</p>
               <div className="font-display text-3xl font-bold text-primary-400 mb-1">
                 {stats?.conversations ?? 0}
               </div>
@@ -132,7 +129,7 @@ export default function StudentDashboard() {
             </div>
 
             <div className="ds-card p-5 animate-fade-up-delay-2">
-              <div className="text-3xl mb-2">📂</div>
+              <p className="text-2xl mb-2">📄</p>
               <div className="font-display text-3xl font-bold text-accent-400 mb-1">
                 {recentDocs.length > 0 ? recentDocs.length + '+' : '0'}
               </div>
