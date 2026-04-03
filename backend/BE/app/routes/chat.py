@@ -103,8 +103,7 @@ def get_messages(conversation_id):
             m["created_at"] = m["created_at"].isoformat()
     return jsonify(messages), 200
 
-
-@chat_bp.route("/conversations/<conversation_id>", methods=["PATCH"])
+@chat_bp.route("/conversations/<conversation_id>", methods=["PUT"]) # Changé ici
 @role_required("etudiant")
 def update_conversation(conversation_id):
     data = request.json
@@ -113,7 +112,6 @@ def update_conversation(conversation_id):
         {"$set": {"titre": data.get("titre")}}
     )
     return jsonify({"message": "Titre modifié"}), 200
-
 
 @chat_bp.route("/conversations/<conversation_id>", methods=["DELETE"])
 @role_required("etudiant")

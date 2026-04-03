@@ -65,6 +65,21 @@ def upload():
 @role_required("etudiant", "professeur", "admin")
 def list_documents():
     filters = {}
+    
+    # 1. Récupérer l'ID et le rôle de celui qui appelle l'API
+    # Note: Assure-toi que ton middleware passe les infos ou utilise get_jwt()
+    current_user_id = get_jwt_identity()
+    
+    # 2. Logique de filtrage par rôle
+    # Si c'est un professeur, il ne voit que ses documents
+    # (On suppose que ton token contient le rôle, sinon on filtre par défaut pour les profs)
+    # Si tu ne peux pas vérifier le rôle ici, on peut passer un flag via les query params
+    is_prof_view = request.args.get("my_docs_only") == "true"
+    
+    if is_prof_view:
+        filters["uploaded_by"] = current_user_id
+
+    # 3. Tes filtres existants (Filière, Matière, etc.)
     for key in ["filiere_id", "matiere_id", "annee_id", "type"]:
         val = request.args.get(key)
         if val:
@@ -93,3 +108,34 @@ def delete_document(doc_id):
 
     db["ressources"].delete_one({"_id": ObjectId(doc_id)})
     return jsonify({"message": "Document supprimé"}), 200
+
+
+
+# ROUTE DELETE
+@documents_bp.route("/<doc_id>", methods=["DELETE"])
+@role_required("admin") # Seul l'admin peut tout delete
+def admin_delete_document(doc_id):
+    doc = db["ressources"].find_one({"_id": ObjectId(doc_id)})
+    if not doc: return jsonify({"error": "Introuvable"}), 404
+
+    # 1. Supprimer du dossier uploads
+    if os.path.exists(doc["file_path"]):
+        os.remove(doc["file_path"])
+    
+    # 2. Supprimer de MongoDB
+    db["ressources"].delete_one({"_id": ObjectId(doc_id)})
+    
+    return jsonify({"message": "Supprimé par l'admin"}), 200
+
+# ROUTE UPDATE (PUT)
+@documents_bp.route("/<doc_id>", methods=["PUT"])
+@role_required("admin")
+def admin_update_document(doc_id):
+    data = request.json
+    nouveau_titre = data.get("titre")
+    
+    db["ressources"].update_one(
+        {"_id": ObjectId(doc_id)},
+        {"$set": {"titre": nouveau_titre}}
+    )
+    return jsonify({"message": "Mis à jour"}), 200

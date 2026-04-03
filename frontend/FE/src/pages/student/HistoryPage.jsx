@@ -14,7 +14,8 @@ export default function HistoryPage() {
   const [loadingMessages, setLoadingMessages] = useState(false)
   const [searchFilter, setSearchFilter]   = useState('')
   const [sortOption, setSortOption]       = useState('recent')
-
+const [isEditing, setIsEditing] = useState(false);
+const [editTitle, setEditTitle] = useState('');
   // Charger les conversations
   useEffect(() => {
     getChatHistory()
@@ -57,6 +58,42 @@ export default function HistoryPage() {
       }
       return 0
     })
+
+    // Fonction pour supprimer une conversation
+  async function deleteConversation(id, e) {
+    if (e) e.stopPropagation(); // Empêche l'ouverture de la conv lors du clic sur la corbeille
+    if (!window.confirm("Supprimer cette conversation ?")) return;
+    
+    try {
+      await axiosInstance.delete(`/chat/conversations/${id}`);
+      // Mise à jour de l'affichage local
+      setConversations(prev => prev.filter(c => c._id !== id));
+      if (selectedConv?._id === id) setSelectedConv(null);
+    } catch (err) {
+      console.error("Erreur suppression:", err);
+    }
+  }
+
+  // Fonction pour modifier le titre
+async function handleUpdateTitle() {
+  if (!editTitle.trim()) return;
+  try {
+    // On utilise .put pour matcher le changement backend
+    await axiosInstance.put(`/chat/conversations/${selectedConv._id}`, { 
+      titre: editTitle 
+    });
+    
+    // Mise à jour de l'état local
+    setConversations(prev => prev.map(c => 
+      c._id === selectedConv._id ? { ...c, titre: editTitle } : c
+    ));
+    setSelectedConv(prev => ({ ...prev, titre: editTitle }));
+    setIsEditing(false);
+  } catch (err) {
+    console.error("Erreur PUT:", err);
+    alert("Erreur lors de la modification");
+  }
+}
 
   return (
     <div className="animate-fade-up">
@@ -119,31 +156,42 @@ export default function HistoryPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {filteredConversations.map(conv => (
-                  <div
-                    key={conv._id}
-                    onClick={() => loadMessages(conv)}
-                    className={`ds-card p-4 cursor-pointer transition-all duration-200 hover:border-primary-500/30
-                      ${selectedConv?._id === conv._id
-                        ? 'border-primary-500/50 bg-primary-600/10'
-                        : 'hover:shadow-glow'}`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white truncate mb-1">
-                          💬 {conv.titre || 'Conversation'}
-                        </p>
-                        <p className="text-xs text-dark-500">
-                          {formatDate(conv.created_at)}
-                        </p>
-                      </div>
-                      {selectedConv?._id === conv._id && (
-                        <span className="w-2 h-2 rounded-full bg-primary-400 shrink-0 mt-1.5" />
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
+  {filteredConversations.map(conv => (
+    /* 1. Ajout de "group" et "relative" ici */
+    <div
+      key={conv._id}
+      onClick={() => loadMessages(conv)}
+      className={`ds-card p-4 cursor-pointer transition-all duration-200 hover:border-primary-500/30 relative group
+        ${selectedConv?._id === conv._id
+          ? 'border-primary-500/50 bg-primary-600/10'
+          : 'hover:shadow-glow'}`}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-white truncate mb-1">
+            💬 {conv.titre || 'Conversation'}
+          </p>
+          <p className="text-xs text-dark-500">
+            {formatDate(conv.created_at)}
+          </p>
+        </div>
+
+        {/* 2. Le bouton de suppression qui apparaît au survol */}
+        <button
+          onClick={(e) => deleteConversation(conv._id, e)}
+          className="ds-btn-danger text-xs py-1.5 px-3"
+          title="Supprimer la conversation"
+        >
+          🗑️
+        </button>
+
+        {selectedConv?._id === conv._id && (
+          <span className="w-2 h-2 rounded-full bg-primary-400 shrink-0 mt-1.5" />
+        )}
+      </div>
+    </div>
+  ))}
+</div>
             )}
           </div>
 
@@ -157,17 +205,57 @@ export default function HistoryPage() {
             ) : (
               <>
                 {/* Header conversation */}
-                <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/5">
-                  <div>
-                    <h2 className="ds-title text-lg">{selectedConv.titre || 'Conversation'}</h2>
-                    <p className="ds-muted text-xs">{formatDate(selectedConv.created_at)}</p>
-                  </div>
-                  <button
-                    onClick={() => continueConversation(selectedConv)}
-                    className="ds-btn-primary text-sm">
-                    ▶ Continuer
-                  </button>
-                </div>
+               {/* Header conversation */}
+<div className="flex items-center justify-between mb-6 pb-4 border-b border-white/5">
+  <div className="flex-1 min-w-0 mr-4">
+    {isEditing ? (
+      /* MODE ÉDITION : On affiche l'input */
+      <div className="flex items-center gap-2">
+        <input
+          value={editTitle}
+          onChange={(e) => setEditTitle(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleUpdateTitle()}
+          className="ds-input py-1 text-sm bg-dark-900 border-primary-500 w-full max-w-sm"
+          autoFocus
+        />
+        <button onClick={handleUpdateTitle} className="text-green-500 hover:text-green-400 font-bold text-xs">OK</button>
+        <button onClick={() => setIsEditing(false)} className="text-dark-400 hover:text-white text-xs">X</button>
+      </div>
+    ) : (
+      /* MODE LECTURE : Titre + Crayon */
+      <div className="flex items-center gap-2 group">
+        <h2 className="ds-title text-lg truncate">
+          {selectedConv.titre || 'Conversation'}
+        </h2>
+        <button 
+          onClick={() => { setEditTitle(selectedConv.titre || ''); setIsEditing(true); }}
+          className="text-xs opacity-0 group-hover:opacity-50 hover:!opacity-100 transition-opacity"
+          title="Modifier le titre"
+        >
+          ✏️
+        </button>
+      </div>
+    )}
+    <p className="ds-muted text-xs">{formatDate(selectedConv.created_at)}</p>
+  </div>
+
+  <div className="flex items-center gap-3">
+    {/* Optionnel : Bouton supprimer aussi ici */}
+    {/* <button
+      onClick={() => deleteConversation(selectedConv._id)}
+      className="text-xs text-red-500/70 hover:text-red-500 transition-colors"
+    >
+      Supprimer
+    </button> */}
+    
+    <button
+      onClick={() => continueConversation(selectedConv)}
+      className="ds-btn-primary text-sm py-1.5 px-4"
+    >
+      ▶ Continuer
+    </button>
+  </div>
+</div>
 
                 {/* Messages */}
                 {loadingMessages ? (

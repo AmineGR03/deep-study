@@ -29,6 +29,8 @@ import ManageFilieresPage    from './pages/admin/ManageFilieresPage'
 import ManageSpecialitesPage from './pages/admin/ManageSpecialitesPage'
 import ManageMatieresPage    from './pages/admin/ManageMatieresPage'
 import ManageTypesPage       from './pages/admin/ManageTypesPage'
+
+import ManageDocumentsPageAdmin from './pages/admin/ManageDocumentsPageAdmin'
 // import DocumentsListPage     from './pages/professor/DocumentsListPage'
 
 
@@ -126,7 +128,7 @@ export default function App() {
               <PrivatePage roles={['admin']}><ManageTypesPage /></PrivatePage>
             }/>
             <Route path="/admin/documents" element={
-              <PrivatePage roles={['admin', 'professeur']}><DocumentsListPage /></PrivatePage>
+              <PrivatePage roles={['admin', 'professeur']}><ManageDocumentsPageAdmin /></PrivatePage>
             }/>
 
             {/* ── Fallback ── */}
