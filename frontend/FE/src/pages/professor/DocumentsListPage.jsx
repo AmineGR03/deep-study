@@ -58,6 +58,16 @@ export default function DocumentsListPage() {
     })
   }
 
+
+  const handleDelete = async (docId) => {
+  try {
+    await axiosInstance.delete(`/documents/${docId}`)
+     window.location.reload();
+  } catch (err) {
+    console.error(err)
+  }
+}
+
   return (
     <div className="animate-fade-up p-4">
       <div className="mb-8">
@@ -130,6 +140,7 @@ export default function DocumentsListPage() {
                 doc={doc} 
                 isOwner={true} // Optionnel : si ta carte a un style "propriétaire"
                 isProf={true}
+                onDelete={handleDelete}
               />
             ))}
           </div>

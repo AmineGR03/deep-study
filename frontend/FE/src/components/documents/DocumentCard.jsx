@@ -69,7 +69,7 @@ export default function DocumentCard({ doc, isAdmin , onDelete , isProf }) {
         {(isAdmin || isProf) && (
         <div className="flex gap-2 shrink-0">
           {/* <button onClick={onEdit} className="p-1 bg-blue-500 rounded text-white text-xs">✏️</button> */}
-          <button onClick={onDelete} className="ds-btn-danger text-xs py-1.5 px-3">🗑️</button>
+          <button  onClick={() => onDelete(doc._id)}  className="ds-btn-danger text-xs py-1.5 px-3">🗑️</button>
         </div>)}
         
       </div>

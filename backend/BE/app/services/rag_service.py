@@ -20,6 +20,9 @@ GROQ_MODEL   = "llama-3.3-70b-versatile"
 ENV_PATTERN = r'(?:pmatrix|bmatrix|matrix|aligned|align|align\*|cases)'
 
 
+
+
+
 def fix_latex_delimiters(text: str) -> str:
     if not text:
         return text
